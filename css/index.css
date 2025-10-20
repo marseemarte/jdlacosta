@@ -1,0 +1,199 @@
+        :root {
+            --primary-blue: #0047AB;
+            --accent-red: #FF3333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .top-header {
+            background-color: var(--primary-blue);
+            padding: 15px 0;
+        }
+
+        .btn-login {
+            background-color: var(--accent-red);
+            color: white;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .btn-login:hover {
+            background-color: #cc0000;
+            color: white;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #212529;
+        }
+
+        .subtitle {
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .warning-text {
+            color: var(--accent-red);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .search-wrapper {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid var(--primary-blue);
+            border-radius: 50px;
+            font-size: 1rem;
+            transition: box-shadow 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 71, 171, 0.1);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #00BFFF;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-btn:hover {
+            background-color: #0099CC;
+        }
+
+        .view-toggle {
+            display: flex;
+            border-radius: 50px;
+            overflow: hidden;
+            border: 2px solid var(--primary-blue);
+            background: white;
+        }
+
+        .view-btn {
+            flex: 1;
+            padding: 12px 30px;
+            border: none;
+            background: white;
+            color: var(--primary-blue);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .view-btn.active {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+
+        .view-btn:hover:not(.active) {
+            background-color: #f0f0f0;
+        }
+
+        .schools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .school-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .school-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .school-image {
+            width: 120px;
+            height: 120px;
+            background-color: var(--primary-blue);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+        }
+
+        .school-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #212529;
+        }
+
+        .school-info {
+            color: #6c757d;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .view-toggle {
+                width: 100%;
+            }
+
+            .schools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
