@@ -150,7 +150,7 @@
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         }
 
-        .school-image {
+        .logo {
             width: 120px;
             height: 120px;
             background-color: var(--primary-blue);
@@ -178,6 +178,55 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+        }
+
+        /* Estilos para mensajes de alerta */
+        .alert {
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .alert-info {
+            color: #0c5460;
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+        }
+
+        .alert i {
+            font-size: 1.2rem;
+        }
+
+        /* Loading spinner */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
