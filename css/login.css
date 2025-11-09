@@ -10,9 +10,11 @@ body {
         .login-container {
             background-color: white;
             padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(27,38,74,0.08);
+            width: 360px;
+            max-width: 95%;
+            border: 1px solid rgba(0,0,0,0.03);
         }
         .form-group {
             margin-bottom: 1rem;
@@ -20,23 +22,38 @@ body {
         label {
             display: block;
             margin-bottom: 0.5rem;
+            color: #21325e;
+            font-weight: 600;
         }
-        input {
+        input.form-control {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 10px;
+            border: 1px solid #e6e9f2;
+            border-radius: 6px;
             box-sizing: border-box;
+            background: #fbfcff;
         }
         button {
             width: 100%;
             padding: 10px;
-            background-color: #1877f2;
+            background-color: #183c8f;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: 600;
         }
         button:hover {
-            background-color: #166fe5;
+            background-color: #142f75;
+        }
+
+        /* Mensaje de error */
+        .error-message{
+            color: #b52222;
+            background: #ffecec;
+            border: 1px solid #f1b6b6;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: none;
         }

@@ -96,9 +96,8 @@ function addSchoolCardListeners() {
             const schoolId = card.getAttribute('data-school-id');
             const school = allSchools.find(s => s.id == schoolId);
             console.log('Escuela seleccionada:', school);
-            // Aquí se implementará la navegación a la página de inscripción
-            // Por ahora, mostramos un alert con la información
-            alert(`Seleccionaste: ${school.nombre}\nLocalidad: ${school.localidad}\nDirección: ${school.direccion}`);
+            // Redirigir al formulario de inscripción con el ID de la escuela
+            window.location.href = `inscripcion.html?escuela_id=${schoolId}`;
         });
     });
 }

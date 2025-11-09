@@ -1,0 +1,21 @@
+:root{
+  --accent:#183c8f;
+  --muted:#6b7280;
+  --card-bg:#ffffff;
+}
+body{
+  background: #f6f8ff;
+  color: #1f2b4d;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.info-card{
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.8), #fff);
+  box-shadow: 0 6px 14px rgba(23,60,143,0.06);
+}
+.table thead th{
+  border-bottom: none;
+}
+.card{
+  border-radius: 10px;
+}

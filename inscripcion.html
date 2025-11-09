@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscripción - Secundaria La Costa 2025</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            padding: 20px 0;
+        }
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        .form-section h5 {
+            color: #0047AB;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .form-control, .form-select {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0047AB;
+            box-shadow: 0 0 0 0.2rem rgba(0, 71, 171, 0.25);
+        }
+        .file-upload {
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+            background: white;
+        }
+        .file-upload:hover {
+            border-color: #0047AB;
+        }
+        .btn-guardar {
+            background-color: #0047AB;
+            color: white;
+            padding: 12px 40px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            float: right;
+        }
+        .btn-guardar:hover {
+            background-color: #003380;
+        }
+        .info-text {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .copyright {
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        #status_ocr_estudiante, #status_ocr_tutor {
+            font-size: 0.9rem;
+        }
+        .ocr-loading {
+            color: #0047AB;
+        }
+        .ocr-success {
+            color: #28a745;
+        }
+        .ocr-error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2 class="mb-4" style="color: #0047AB;">Inscripción Secundaria La Costa 2025</h2>
+
+        <form id="inscripcionForm" enctype="multipart/form-data">
+            <input type="hidden" id="escuela_id" name="escuela_id">
+
+            <!-- Fotos del DNI del Estudiante (AHORA ARRIBA) -->
+            <div class="form-section">
+                <h5><i class="fas fa-id-card"></i> Fotos del DNI del Estudiante</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Frente del DNI</label>
+                        <div class="file-upload">
+                            <input type="file" class="form-control" id="dni_frente_estudiante" name="dni_frente_estudiante" accept="image/*" required>
+                            <small class="text-muted">Seleccione archivo</small>
+                            <div id="preview_frente_estudiante" class="mt-2"></div>
+                            <button type="button" class="btn btn-sm btn-primary mt-2" id="btn_extraer_estudiante" style="display:none;">
+                                <i class="fas fa-magic"></i> Extraer datos automáticamente
+                            </button>
+                            <div id="status_ocr_estudiante" class="mt-2"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Reverso del DNI</label>
+                        <div class="file-upload">
+                            <input type="file" class="form-control" id="dni_reverso_estudiante" name="dni_reverso_estudiante" accept="image/*" required>
+                            <small class="text-muted">Seleccione archivo</small>
+                            <div id="preview_reverso_estudiante" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-2" id="manual_estudiante" style="display:none;">
+                    <small><i class="fas fa-info-circle"></i> <strong>¿No funcionó?</strong> Puede cargar los datos manualmente en los campos del formulario de abajo. Los campos se pueden completar de forma manual en cualquier momento.</small>
+                </div>
+            </div>
+
+            <!-- Datos del Estudiante (AHORA ABAJO) -->
+            <div class="form-section">
+                <h5><i class="fas fa-user-graduate"></i> Datos del Estudiante</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="dni_estudiante" class="form-label">DNI</label>
+                        <input type="text" class="form-control" id="dni_estudiante" name="dni_estudiante" placeholder="DNI" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="nombre_estudiante" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre_estudiante" name="nombre_estudiante" placeholder="Nombre" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="apellido_estudiante" class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="apellido_estudiante" name="apellido_estudiante" placeholder="Apellido" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="fecha_nacimiento_estudiante" class="form-label">Fecha de Nacimiento</label>
+                        <input type="date" class="form-control" id="fecha_nacimiento_estudiante" name="fecha_nacimiento_estudiante" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="domicilio_estudiante" class="form-label">Domicilio real</label>
+                        <input type="text" class="form-control" id="domicilio_estudiante" name="domicilio_estudiante" placeholder="Dirección" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="localidad_estudiante" class="form-label">Localidad</label>
+                        <select class="form-select" id="localidad_estudiante" name="localidad_estudiante" required>
+                            <option value="">Seleccione una localidad</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="escuela_procedencia" class="form-label">Escuela de procedencia</label>
+                        <select class="form-select" id="escuela_procedencia" name="escuela_procedencia" required>
+                            <option value="">Seleccione una escuela</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="segunda_opcion" class="form-label">2da Opción de escuela (Sujeto a vacante)</label>
+                        <select class="form-select" id="segunda_opcion" name="segunda_opcion">
+                            <option value="">Seleccione una escuela</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="tercera_opcion" class="form-label">3ra Opción de escuela (Sujeto a vacante)</label>
+                        <select class="form-select" id="tercera_opcion" name="tercera_opcion">
+                            <option value="">Seleccione una escuela</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="turno_preferencia" class="form-label">Turno de preferencia</label>
+                        <select class="form-select" id="turno_preferencia" name="turno_preferencia" required>
+                            <option value="Mañana">Mañana</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Vespertino">Vespertino</option>
+                        </select>
+                        <div class="info-text">
+                            La elección del turno no garantiza la asignación del mismo
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="vinculo" class="form-label">Vínculo con la escuela</label>
+                        <select class="form-select" id="vinculo" name="vinculo" required>
+                            <option value="">Seleccione un vínculo</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Datos del padre, madre o tutor -->
+            <div class="form-section">
+                <h5><i class="fas fa-user-friends"></i> Datos del padre, madre o tutor</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="dni_tutor" class="form-label">DNI</label>
+                        <input type="text" class="form-control" id="dni_tutor" name="dni_tutor" placeholder="DNI" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="nombre_tutor" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre_tutor" name="nombre_tutor" placeholder="Nombre" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="apellido_tutor" class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="apellido_tutor" name="apellido_tutor" placeholder="Apellido" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="fecha_nacimiento_tutor" class="form-label">Fecha de Nacimiento</label>
+                        <input type="date" class="form-control" id="fecha_nacimiento_tutor" name="fecha_nacimiento_tutor" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="telefono_tutor" class="form-label">Telefono</label>
+                        <input type="tel" class="form-control" id="telefono_tutor" name="telefono_tutor" placeholder="Telefono" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="email_tutor" class="form-label">E-Mail</label>
+                        <input type="email" class="form-control" id="email_tutor" name="email_tutor" placeholder="E-Mail" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fotos del DNI del padre, madre o tutor -->
+            <div class="form-section">
+                <h5><i class="fas fa-id-card"></i> Fotos del DNI del padre, madre o tutor</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Frente del DNI</label>
+                        <div class="file-upload">
+                            <input type="file" class="form-control" id="dni_frente_tutor" name="dni_frente_tutor" accept="image/*" required>
+                            <small class="text-muted">Seleccione archivo</small>
+                            <div id="preview_frente_tutor" class="mt-2"></div>
+                            <button type="button" class="btn btn-sm btn-primary mt-2" id="btn_extraer_tutor" style="display:none;">
+                                <i class="fas fa-magic"></i> Extraer datos automáticamente
+                            </button>
+                            <div id="status_ocr_tutor" class="mt-2"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Reverso del DNI</label>
+                        <div class="file-upload">
+                            <input type="file" class="form-control" id="dni_reverso_tutor" name="dni_reverso_tutor" accept="image/*" required>
+                            <small class="text-muted">Seleccione archivo</small>
+                            <div id="preview_reverso_tutor" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-2" id="manual_tutor" style="display:none;">
+                    <small><i class="fas fa-info-circle"></i> <strong>¿No funcionó?</strong> Puede cargar los datos manualmente en los campos del formulario de arriba. Los campos se pueden completar de forma manual en cualquier momento.</small>
+                </div>
+            </div>
+
+            <!-- Botón Guardar -->
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <a href="index.html" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+                <button type="submit" class="btn btn-guardar">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </form>
+
+        <div class="copyright">
+            © 2025, Desarrollado por Escuela de Educación Secundaria Técnica N° 1 Santa Teresita.
+        </div>
+    </div>
+
+    <!-- Tesseract.js para OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="js/inscripcion.js"></script>
+</body>
+</html>
+
