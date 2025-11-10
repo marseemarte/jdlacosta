@@ -116,7 +116,13 @@
                         <div class="file-upload">
                             <input type="file" class="form-control" id="dni_frente_estudiante" name="dni_frente_estudiante" accept="image/*" required>
                             <small class="text-muted">Seleccione archivo</small>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="btn_scan_frente_estudiante" style="display: none;">
+                                    <i class="fas fa-qrcode"></i> Escanear DNI
+                                </button>
+                            </div>
                             <div id="preview_frente_estudiante" class="mt-2"></div>
+                            <div id="status_ocr_estudiante" class="mt-2"></div>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
@@ -124,6 +130,11 @@
                         <div class="file-upload">
                             <input type="file" class="form-control" id="dni_reverso_estudiante" name="dni_reverso_estudiante" accept="image/*" required>
                             <small class="text-muted">Seleccione archivo</small>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="btn_scan_reverso_estudiante" style="display: none;">
+                                    <i class="fas fa-qrcode"></i> Escanear DNI
+                                </button>
+                            </div>
                             <div id="preview_reverso_estudiante" class="mt-2"></div>
                         </div>
                     </div>
@@ -252,7 +263,13 @@
                         <div class="file-upload">
                             <input type="file" class="form-control" id="dni_frente_tutor" name="dni_frente_tutor" accept="image/*" required>
                             <small class="text-muted">Seleccione archivo</small>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="btn_scan_frente_tutor" style="display: none;">
+                                    <i class="fas fa-qrcode"></i> Escanear DNI
+                                </button>
+                            </div>
                             <div id="preview_frente_tutor" class="mt-2"></div>
+                            <div id="status_ocr_tutor" class="mt-2"></div>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
@@ -260,6 +277,11 @@
                         <div class="file-upload">
                             <input type="file" class="form-control" id="dni_reverso_tutor" name="dni_reverso_tutor" accept="image/*" required>
                             <small class="text-muted">Seleccione archivo</small>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="btn_scan_reverso_tutor" style="display: none;">
+                                    <i class="fas fa-qrcode"></i> Escanear DNI
+                                </button>
+                            </div>
                             <div id="preview_reverso_tutor" class="mt-2"></div>
                         </div>
                     </div>
@@ -282,6 +304,8 @@
         </div>
     </div>
 
+    <!-- Tesseract.js para OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
     <script src="js/inscripcion.js"></script>
 </body>
 </html>
