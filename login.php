@@ -20,9 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $config = __DIR__ . '/api/config.php';
-    if (!file_exists($config)) {
-        $msg = 'Falta configuración de la base de datos';
+    // usar conex.php (wrapper) para obtener $pdo o la función conex()
+    $conexFile = __DIR__ . '/conex.php';
+    if (!file_exists($conexFile)) {
+        $msg = 'Falta conexión a la base de datos (conex.php)';
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
             header('Content-Type: application/json; charset=utf-8');
             http_response_code(500);
@@ -33,12 +34,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    require_once $config;
+    require_once $conexFile;
 
     try {
-        $pdo = getDBConnection();
+        // preferimos la variable $pdo si fue inicializada por conex.php
+        if (!empty($pdo) && $pdo instanceof PDO) {
+            $db = $pdo;
+        } else {
+            // conex() puede lanzar excepción si falla
+            $db = conex();
+        }
+
         $sql = "SELECT id, nombre FROM secundarias WHERE clave = :clave AND pass = :pass LIMIT 1";
-        $stmt = $pdo->prepare($sql);
+        $stmt = $db->prepare($sql);
         $stmt->execute([':clave' => $clave, ':pass' => $pass]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
