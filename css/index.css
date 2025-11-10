@@ -1,5 +1,6 @@
         :root {
-            --primary-blue: #dbdbdb;
+            /* Neutralizamos el "primary-blue" para evitar fondos azules no deseados */
+            --primary-blue: #e9ecef; /* gris claro */
             --accent-red: #FF3333;
         }
 
@@ -9,7 +10,7 @@
         }
 
         .top-header {
-            background-color: var(--primary-blue);
+            background-color: transparent;
             padding: 15px 0;
         }
 
