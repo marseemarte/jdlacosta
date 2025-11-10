@@ -13,10 +13,11 @@ $alumno = $stmt->fetch(PDO::FETCH_ASSOC);
 // Tutor
 $tutor = ['dni'=>'','nombre'=>'','apellido'=>'','fecha'=>'','telefono'=>'','mail'=>''];
 if ($alumno) {
+    // Usar el ID del alumno en lugar del DNI para la relación
     $padre = $pdo->prepare("SELECT p.* FROM padres p
-        JOIN padrealumno pa ON pa.dni_padre = p.dni
-        WHERE pa.dni_alumno = :dni LIMIT 1");
-    $padre->execute([':dni' => $alumno['dni']]);
+        JOIN padrealumno pa ON pa.dni_padre = p.id
+        WHERE pa.dni_alumno = :id LIMIT 1");
+    $padre->execute([':id' => $alumno['id']]);
     $t = $padre->fetch(PDO::FETCH_ASSOC);
     if ($t) $tutor = array_merge($tutor, $t);
 }

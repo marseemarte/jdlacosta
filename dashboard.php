@@ -411,11 +411,11 @@ $(document).ready(function(){
           <div class="col-md-6">
             <h6 class="mb-3 text-primary">Datos del padre, madre o tutor</h6>
             <div class="mb-2"><strong>DNI:</strong> <span>${t.dni || ''}</span></div>
-            <div class="mb-2"><strong>Nombre:</strong> <span>${t.nombre || ''}</span></div>
-            <div class="mb-2"><strong>Apellido:</strong> <span>${t.apellido || ''}</span></div>
+            <div class="mb-2"><strong>Nombre:</strong> <span>${t.nombre || ''} ${t.apellido || ''}</span></div>
             <div class="mb-2"><strong>Fecha de Nacimiento:</strong> <span>${t.fecha || ''}</span></div>
             <div class="mb-2"><strong>Teléfono:</strong> <span>${t.telefono || ''}</span></div>
             <div class="mb-2"><strong>E-Mail:</strong> <span>${t.mail || ''}</span></div>
+            ${t.dni ? '<div class="mt-3 text-muted"><small><i class="fas fa-user-shield me-1"></i>Responsable legal del alumno</small></div>' : '<div class="mt-3 text-muted"><small><i class="fas fa-exclamation-triangle me-1"></i>No se encontraron datos del tutor</small></div>'}
           </div>
         </div>
       </div>
