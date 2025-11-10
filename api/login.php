@@ -31,7 +31,7 @@ try {
     $pdo = getDBConnection();
 
     // tabla 'secundarias' (ajustar si tu tabla tiene otro nombre)
-    $sql = "SELECT id, nombre FROM secundarias WHERE clave = :clave AND pass = :pass LIMIT 1";
+    $sql = "SELECT id, nombre, abreviatura, distrito FROM secundarias WHERE clave = :clave AND pass = :pass LIMIT 1";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':clave' => $clave, ':pass' => $pass]);
     $esc = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -40,6 +40,15 @@ try {
         // sesión mínima
         $_SESSION['escuela_id'] = $esc['id'];
         $_SESSION['escuela_nombre'] = $esc['nombre'];
+        
+        // Detectar si es usuario JEFATURA
+        if (isset($esc['abreviatura']) && $esc['abreviatura'] === 'JEFATURA') {
+            $_SESSION['es_jefatura'] = true;
+            $_SESSION['distrito'] = (int)$esc['distrito'];
+        } else {
+            $_SESSION['es_jefatura'] = false;
+        }
+        
         echo json_encode(['success' => true]);
         exit;
     }
