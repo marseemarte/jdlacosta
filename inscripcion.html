@@ -117,10 +117,6 @@
                             <input type="file" class="form-control" id="dni_frente_estudiante" name="dni_frente_estudiante" accept="image/*" required>
                             <small class="text-muted">Seleccione archivo</small>
                             <div id="preview_frente_estudiante" class="mt-2"></div>
-                            <button type="button" class="btn btn-sm btn-primary mt-2" id="btn_extraer_estudiante" style="display:none;">
-                                <i class="fas fa-magic"></i> Extraer datos automáticamente
-                            </button>
-                            <div id="status_ocr_estudiante" class="mt-2"></div>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
@@ -131,9 +127,6 @@
                             <div id="preview_reverso_estudiante" class="mt-2"></div>
                         </div>
                     </div>
-                </div>
-                <div class="alert alert-info mt-2" id="manual_estudiante" style="display:none;">
-                    <small><i class="fas fa-info-circle"></i> <strong>¿No funcionó?</strong> Puede cargar los datos manualmente en los campos del formulario de abajo. Los campos se pueden completar de forma manual en cualquier momento.</small>
                 </div>
             </div>
 
@@ -146,14 +139,14 @@
                         <input type="text" class="form-control" id="dni_estudiante" name="dni_estudiante" placeholder="DNI" required>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="nombre_estudiante" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="nombre_estudiante" name="nombre_estudiante" placeholder="Nombre" required>
+                        <label for="apellido_estudiante" class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="apellido_estudiante" name="apellido_estudiante" placeholder="Apellido" required>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="apellido_estudiante" class="form-label">Apellido</label>
-                        <input type="text" class="form-control" id="apellido_estudiante" name="apellido_estudiante" placeholder="Apellido" required>
+                        <label for="nombre_estudiante" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre_estudiante" name="nombre_estudiante" placeholder="Nombre" required>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="fecha_nacimiento_estudiante" class="form-label">Fecha de Nacimiento</label>
@@ -260,10 +253,6 @@
                             <input type="file" class="form-control" id="dni_frente_tutor" name="dni_frente_tutor" accept="image/*" required>
                             <small class="text-muted">Seleccione archivo</small>
                             <div id="preview_frente_tutor" class="mt-2"></div>
-                            <button type="button" class="btn btn-sm btn-primary mt-2" id="btn_extraer_tutor" style="display:none;">
-                                <i class="fas fa-magic"></i> Extraer datos automáticamente
-                            </button>
-                            <div id="status_ocr_tutor" class="mt-2"></div>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
@@ -274,9 +263,6 @@
                             <div id="preview_reverso_tutor" class="mt-2"></div>
                         </div>
                     </div>
-                </div>
-                <div class="alert alert-info mt-2" id="manual_tutor" style="display:none;">
-                    <small><i class="fas fa-info-circle"></i> <strong>¿No funcionó?</strong> Puede cargar los datos manualmente en los campos del formulario de arriba. Los campos se pueden completar de forma manual en cualquier momento.</small>
                 </div>
             </div>
 
@@ -296,8 +282,6 @@
         </div>
     </div>
 
-    <!-- Tesseract.js para OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="js/inscripcion.js"></script>
 </body>
 </html>

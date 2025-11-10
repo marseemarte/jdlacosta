@@ -68,6 +68,147 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
         <a href="api/logout.php" class="btn btn-outline-danger btn-sm"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
       </div>
     </div>
+    <style>
+      :root {
+  --accent: #183c8f;
+  --accent-light: #4f6fdc;
+  --muted: #6b7280;
+  --card-bg: #fff;
+  --bg-gradient: linear-gradient(120deg, #f6f8ff 0%, #e9eefa 100%);
+  --shadow: 0 4px 24px 0 rgba(24,60,143,0.10);
+  --radius: 1.2rem;
+}
+
+body {
+  background: var(--bg-gradient);
+  color: #1f2b4d;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+
+}
+
+header {
+  background: linear-gradient(90deg, #f6f8ff, #ffffff);
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(24,60,143,0.04);
+}
+
+.info-card {
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  border: none;
+  transition: box-shadow 0.2s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.info-card:hover {
+  box-shadow: 0 8px 32px 0 rgba(24,60,143,0.16);
+  transform: translateY(-2px) scale(1.01);
+}
+.info-card .h5 {
+  font-weight: 700;
+  color: var(--accent);
+}
+.info-card i {
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 8px #e9eefa);
+}
+
+.card {
+  border-radius: var(--radius);
+  border: none;
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+}
+
+.summary-card {
+  background: linear-gradient(90deg, #e9eefa 60%, #f6f8ff 100%);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: none;
+  margin-top: 2rem;
+}
+
+.summary-card h6 {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.summary-card p {
+  font-size: 1.1rem;
+  margin-bottom: 0;
+}
+
+/* Modern Table Styles */
+.table {
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 24px 0 rgba(24,60,143,0.07);
+  background: #fff;
+  margin-bottom: 0;
+}
+
+.table thead th {
+  background: linear-gradient(90deg, #e9eefa 60%, #f6f8ff 100%);
+  color: #183c8f;
+  font-weight: 700;
+  font-size: 1.05rem;
+  border-top: none;
+  border-bottom: 2px solid #e9eefa;
+  letter-spacing: 0.02em;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #f8fafc;
+}
+.table-hover tbody tr:hover {
+  background-color: #e3eafd;
+  transition: background 0.18s;
+}
+.table td, .table th {
+  vertical-align: middle;
+  padding: 0.85rem 0.75rem;
+  font-size: 1.01rem;
+}
+.table .badge {
+  font-size: 0.92em;
+  padding: 0.45em 0.8em;
+  border-radius: 1rem;
+  background: #e9eefa;
+  color: #183c8f;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.btn-primary {
+  border-radius: 1.5rem;
+  font-size: 0.97rem;
+  padding: 0.35rem 1.1rem;
+  box-shadow: 0 2px 8px 0 rgba(24,60,143,0.07);
+}
+
+@media (max-width: 767px) {
+  .table thead { display: none; }
+  .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+  .table tr { margin-bottom: 1rem; }
+  .table td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+  }
+  .table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 1rem;
+    top: 0.85rem;
+    font-weight: 600;
+    color: #183c8f;
+    text-align: left;
+  }
+}
+    </style>
   </header>
 
   <main class="container mb-5">
@@ -157,7 +298,7 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
       <div id="noIngresanList">
         <!-- cargaremos la lista vía AJAX -->
         <div class="table-responsive">
-          <table id="noIngresanTable" class="display table table-sm" style="width:100%">
+          <table id="noIngresarTable" class="display table table-sm" style="width:100%">
             <thead>
               <tr>
                 <th>DNI</th>
@@ -214,6 +355,26 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
 
   </main>
 
+<!-- Modal Ver Ficha Alumno -->
+<div class="modal fade" id="modalFichaAlumno" tabindex="-1" aria-labelledby="modalFichaAlumnoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="modalFichaAlumnoLabel"><i class="fas fa-user-graduate me-2"></i>Ficha de Inscripción</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" style="background:#f6f8ff;">
+        <div id="fichaAlumnoContent">
+          <div class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 $(document).ready(function(){
   // DataTable para "Ingresan" (trae datos desde API)
@@ -230,7 +391,14 @@ $(document).ready(function(){
       { data: 'telefono' },
       { data: 'mail' },
       { data: null, orderable: false, render: function (d) {
-          return '<button class="btn btn-sm btn-primary">Ver ficha</button>';
+          return `<button class="btn btn-sm btn-primary ver-ficha-btn" 
+      data-dni="${d.dni}" 
+      data-apellido="${d.apellido}" 
+      data-nombre="${d.nombre}" 
+      data-vinculo="${d.vinculo}" 
+      data-telefono="${d.telefono || ''}" 
+      data-mail="${d.mail || ''}"
+      >Ver ficha</button>`;
         }
       }
     ],
@@ -281,8 +449,8 @@ $(document).ready(function(){
   }
 
   // si existe sección "no ingresan" la cargamos en otra datatable
-  if ($('#noIngresanTable').length) {
-    $('#noIngresanTable').DataTable({
+  if ($('#noIngresarTable').length) {
+    $('#noIngresarTable').DataTable({
       ajax: {
         url: 'api/get_alumnos.php?type=no_ingresan',
         dataSrc: 'data'
@@ -305,7 +473,59 @@ $(document).ready(function(){
       }
     });
   }
+
+  // Modal "Ver ficha" - muestra todos los datos del alumno y tutor
+  $(document).on('click', '.ver-ficha-btn', function() {
+  const dni = $(this).data('dni');
+  $('#fichaAlumnoContent').html('<div class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</div>');
+  var modal = new bootstrap.Modal(document.getElementById('modalFichaAlumno'));
+  modal.show();
+
+  $.getJSON('api/get_ficha_alumno.php?dni=' + encodeURIComponent(dni), function(data) {
+    if (!data.success) {
+      $('#fichaAlumnoContent').html('<div class="alert alert-danger">No se pudo cargar la ficha.</div>');
+      return;
+    }
+    const a = data.alumno;
+    const t = data.tutor;
+    $('#fichaAlumnoContent').html(`
+      <div class="container-fluid">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h6 class="mb-3 text-primary">Datos del Alumno</h6>
+            <div class="mb-2"><strong>DNI:</strong> <span>${a.dni || ''}</span></div>
+            <div class="mb-2"><strong>Nombre:</strong> <span>${a.nombre || ''}</span></div>
+            <div class="mb-2"><strong>Apellido:</strong> <span>${a.apellido || ''}</span></div>
+            <div class="mb-2"><strong>Fecha de Nacimiento:</strong> <span>${a.fecha || ''}</span></div>
+            <div class="mb-2"><strong>Dirección:</strong> <span>${a.direccion || ''}</span></div>
+            <div class="mb-2"><strong>Localidad:</strong> <span>${a.localidad || ''}</span></div>
+            <div class="mb-2"><strong>Escuela de procedencia:</strong> <span>${a.escuela || ''}</span></div>
+            <div class="mb-2"><strong>Turno de preferencia:</strong> <span>${a.turno || ''}</span></div>
+            <div class="mb-2"><strong>Vínculo con la escuela:</strong> <span>${a.vinculo_nombre || a.vinculo || ''}</span></div>
+            <div class="mb-2"><strong>2da opción:</strong> <span>${a.id_sec2 || ''}</span></div>
+            <div class="mb-2"><strong>3ra opción:</strong> <span>${a.id_sec3 || ''}</span></div>
+            <div class="mb-2"><strong>Fecha inscripción:</strong> <span>${a.fecha_insc || ''}</span></div>
+            <div class="mb-2"><strong>Hora inscripción:</strong> <span>${a.hora_insc || ''}</span></div>
+          </div>
+          <div class="col-md-6">
+            <h6 class="mb-3 text-primary">Datos del padre, madre o tutor</h6>
+            <div class="mb-2"><strong>DNI:</strong> <span>${t.dni || ''}</span></div>
+            <div class="mb-2"><strong>Nombre:</strong> <span>${t.nombre || ''}</span></div>
+            <div class="mb-2"><strong>Apellido:</strong> <span>${t.apellido || ''}</span></div>
+            <div class="mb-2"><strong>Fecha de Nacimiento:</strong> <span>${t.fecha || ''}</span></div>
+            <div class="mb-2"><strong>Teléfono:</strong> <span>${t.telefono || ''}</span></div>
+            <div class="mb-2"><strong>E-Mail:</strong> <span>${t.mail || ''}</span></div>
+          </div>
+        </div>
+      </div>
+    `);
+  }).fail(function() {
+    $('#fichaAlumnoContent').html('<div class="alert alert-danger">No se pudo cargar la ficha.</div>');
+  });
+});
+
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
