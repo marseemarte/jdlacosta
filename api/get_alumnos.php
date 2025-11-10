@@ -66,7 +66,7 @@ try {
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':esc_id' => $escuela_id, ':ingreso' => $ingresoVal]);
-    $rows = $stmt->fetchAll();
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode(['data' => $rows]);
     exit;

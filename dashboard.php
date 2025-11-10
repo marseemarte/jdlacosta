@@ -112,6 +112,9 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
     <div id="todosInscriptosCard" class="card p-4 mb-4 d-none">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0 fw-semibold">Todos los inscriptos del distrito</h5>
+        <button id="backToEscuelasBtn1" class="btn btn-sm btn-outline-secondary">
+          <i class="fas fa-arrow-left me-1"></i>Volver
+        </button>
       </div>
       <div class="table-responsive">
         <table id="todosInscriptosTable" class="display table table-striped" style="width:100%">
@@ -123,6 +126,33 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
               <th>Vínculo</th>
               <th>Sorteo</th>
               <th>Secundaria</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Vista JEFATURA: Detalle por escuela (Nómina / Ingresan / No ingresan) -->
+    <div id="escuelaDetalleCard" class="card p-4 mb-4 d-none">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 fw-semibold" id="escuelaDetalleTitulo">Detalle</h5>
+        <button id="backToEscuelasBtn2" class="btn btn-sm btn-outline-secondary">
+          <i class="fas fa-arrow-left me-1"></i>Volver
+        </button>
+      </div>
+      <div class="table-responsive">
+        <table id="escuelaDetalleTable" class="display table table-striped" style="width:100%">
+          <thead>
+            <tr>
+              <th>DNI</th>
+              <th>Apellido</th>
+              <th>Nombre</th>
+              <th>Vínculo</th>
+              <th>Teléfono</th>
+              <th>Mail</th>
+              <th>Sorteo</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -404,15 +434,15 @@ $(document).ready(function(){
         columns: [
           { data: 'dni' },
           { data: 'apellido' },
-          { 
-            data: 'nombre',
-            render: function(data, type, row) {
-              return `<a href="#" class="ver-ficha-link" data-dni="${row.dni}">${data}</a>`;
-            }
-          },
+          { data: 'nombre' },
           { data: 'vinculo' },
           { data: 'orden_sorteo', defaultContent: '-' },
-          { data: 'secundaria' }
+          { data: 'secundaria' },
+          { data: null, orderable: false, render: function (data, type, row) {
+            return `
+              <button class="btn btn-sm btn-primary ver-ficha-link" data-dni="${row.dni}">Ver ficha</button>
+            `;
+          } }
         ],
         pageLength: 25,
         lengthChange: true,
@@ -433,7 +463,7 @@ $(document).ready(function(){
     }
   });
 
-  // Handler para abrir ficha desde el nombre
+  // Handler para abrir ficha (botón)
   $(document).on('click', '.ver-ficha-link', function(e){
     e.preventDefault();
     const dni = $(this).data('dni');
@@ -486,33 +516,104 @@ $(document).ready(function(){
       $('#fichaAlumnoContent').html('<div class="alert alert-danger">No se pudo cargar la ficha.</div>');
     });
   });
-  // Handlers para los botones de acciones
+  // Helpers y handlers para detalle por escuela (Jefatura)
+  var escuelaDetalleInit = false;
+  var escuelaDetalleTable = null;
+  function cargarDetalleEscuela(escuelaId, escuelaNombre, tipo) {
+    // Mostrar card detalle y ocultar otras
+    $('#escuelaDetalleCard').removeClass('d-none');
+    $('#todosInscriptosCard').addClass('d-none');
+    $('.card:has(#escuelasDistritoTable)').addClass('d-none');
+
+    // Título
+    var tituloTipo = (tipo === 'ingresan') ? 'Ingresan' : (tipo === 'no_ingresan' ? 'No ingresan' : 'Nómina inscriptos');
+    $('#escuelaDetalleTitulo').text(tituloTipo + ' - ' + escuelaNombre);
+
+    var ajaxUrl = 'api/get_alumnos_escuela.php?escuela_id=' + encodeURIComponent(escuelaId) + '&type=' + encodeURIComponent(tipo);
+
+    if (!escuelaDetalleInit) {
+      escuelaDetalleTable = $('#escuelaDetalleTable').DataTable({
+        ajax: { url: ajaxUrl, dataSrc: 'data' },
+        columns: [
+          { data: 'dni' },
+          { data: 'apellido' },
+          { data: 'nombre' },
+          { data: 'vinculo' },
+          { data: 'telefono' },
+          { data: 'mail' },
+          { data: 'orden_sorteo', defaultContent: '-' },
+          { data: null, orderable: false, render: function (d, t, row) {
+              return `<button class="btn btn-sm btn-primary ver-ficha-link" data-dni="${row.dni}">Ver ficha</button>`;
+            }
+          }
+        ],
+        pageLength: 25,
+        lengthChange: true,
+        language: {
+          search: "Buscar:",
+          lengthMenu: "Mostrar _MENU_ entradas por página",
+          info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+          infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+          infoFiltered: "(filtrado de _MAX_ entradas totales)",
+          zeroRecords: "No se encontraron registros",
+          paginate: { previous: "Anterior", next: "Siguiente" }
+        }
+      });
+      escuelaDetalleInit = true;
+    } else {
+      escuelaDetalleTable.ajax.url(ajaxUrl).load();
+    }
+
+    $('html, body').animate({ scrollTop: $('#escuelaDetalleCard').offset().top - 80 }, 400);
+  }
+
+  // Botones "Volver" para regresar a la vista de escuelas
+  $('#backToEscuelasBtn1, #backToEscuelasBtn2').on('click', function(e){
+    e.preventDefault();
+    // Ocultar cards secundarias
+    $('#todosInscriptosCard').addClass('d-none');
+    $('#escuelaDetalleCard').addClass('d-none');
+    // Mostrar card principal (escuelas)
+    $('.card:has(#escuelasDistritoTable)').removeClass('d-none');
+    // Scroll al inicio de la card principal
+    var $card = $('.card:has(#escuelasDistritoTable)');
+    if ($card.length) {
+      $('html, body').animate({ scrollTop: $card.offset().top - 80 }, 400);
+    }
+  });
+
   $(document).on('click', '.nomina-btn', function() {
     var escuelaId = $(this).data('escuela-id');
     var escuelaNombre = $(this).data('escuela-nombre');
-    // Aquí puedes implementar la funcionalidad para ver la nómina completa
-    alert('Ver nómina de inscriptos de: ' + escuelaNombre + ' (ID: ' + escuelaId + ')');
+    cargarDetalleEscuela(escuelaId, escuelaNombre, 'nomina');
   });
 
   $(document).on('click', '.ingresan-btn', function() {
     var escuelaId = $(this).data('escuela-id');
     var escuelaNombre = $(this).data('escuela-nombre');
-    // Redirigir o mostrar modal con alumnos que ingresan
-    window.location.href = 'dashboard_escuela.php?escuela_id=' + escuelaId + '&tipo=ingresan';
+    cargarDetalleEscuela(escuelaId, escuelaNombre, 'ingresan');
   });
 
   $(document).on('click', '.no-ingresan-btn', function() {
     var escuelaId = $(this).data('escuela-id');
     var escuelaNombre = $(this).data('escuela-nombre');
-    // Redirigir o mostrar modal con alumnos que no ingresan
-    window.location.href = 'dashboard_escuela.php?escuela_id=' + escuelaId + '&tipo=no_ingresan';
+    cargarDetalleEscuela(escuelaId, escuelaNombre, 'no_ingresan');
   });
   <?php else: ?>
   // DataTable para "Ingresan" (trae datos desde API)
   var table = $('#ingresanTable').DataTable({
     ajax: {
       url: 'api/get_alumnos.php?type=ingresan',
-      dataSrc: 'data'
+      dataSrc: function(json){ 
+        if (!json || typeof json.data === 'undefined') { 
+          console.error('Error cargando ingresan:', json); 
+          return []; 
+        } 
+        return json.data; 
+      },
+      error: function(xhr){ 
+        console.error('AJAX ingresan falló', xhr?.status, xhr?.responseText); 
+      }
     },
     columns: [
       { data: 'dni' },
@@ -556,7 +657,16 @@ $(document).ready(function(){
     $('#listaEsperaTable').DataTable({
       ajax: {
         url: 'api/get_alumnos.php?type=lista_espera',
-        dataSrc: 'data'
+        dataSrc: function(json){ 
+          if (!json || typeof json.data === 'undefined') { 
+            console.error('Error cargando lista_espera:', json); 
+            return []; 
+          } 
+          return json.data; 
+        },
+        error: function(xhr){ 
+          console.error('AJAX lista_espera falló', xhr?.status, xhr?.responseText); 
+        }
       },
       columns: [
         { data: 'dni' },
@@ -584,7 +694,16 @@ $(document).ready(function(){
     $('#noIngresarTable').DataTable({
       ajax: {
         url: 'api/get_alumnos.php?type=no_ingresan',
-        dataSrc: 'data'
+        dataSrc: function(json){ 
+          if (!json || typeof json.data === 'undefined') { 
+            console.error('Error cargando no_ingresan:', json); 
+            return []; 
+          } 
+          return json.data; 
+        },
+        error: function(xhr){ 
+          console.error('AJAX no_ingresan falló', xhr?.status, xhr?.responseText); 
+        }
       },
       columns: [
         { data: 'dni' },
