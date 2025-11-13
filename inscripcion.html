@@ -217,6 +217,58 @@
                         </select>
                     </div>
                 </div>
+                
+                <!-- Campos dinámicos según el vínculo seleccionado -->
+                <div id="campos_vinculo_dinamicos" class="row" style="display: none;">
+                    <!-- Campos para Hermano/a de alumno/a -->
+                    <div id="campos_hermano" class="col-12" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dni_hermano" class="form-label">DNI del hermano/a que estudia en la escuela</label>
+                                <input type="text" class="form-control" id="dni_hermano" name="dni_hermano" placeholder="DNI del hermano/a">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="nombre_hermano" class="form-label">Nombre del hermano/a</label>
+                                <input type="text" class="form-control" id="nombre_hermano" name="nombre_hermano" placeholder="Nombre del hermano/a">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Campos para Hijo/a de profesor/a -->
+                    <div id="campos_profesor" class="col-12" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dni_profesor" class="form-label">DNI del padre/madre profesor/a</label>
+                                <input type="text" class="form-control" id="dni_profesor" name="dni_profesor" placeholder="DNI del profesor/a">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="nombre_profesor" class="form-label">Nombre del padre/madre profesor/a</label>
+                                <input type="text" class="form-control" id="nombre_profesor" name="nombre_profesor" placeholder="Nombre del profesor/a">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="escuela_profesor" class="form-label">Escuela donde trabaja el profesor/a</label>
+                                <input type="text" class="form-control" id="escuela_profesor" name="escuela_profesor" placeholder="Nombre de la escuela">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Campos para PPI -->
+                    <div id="campos_ppi" class="col-12" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="numero_ppi" class="form-label">Número de PPI</label>
+                                <input type="text" class="form-control" id="numero_ppi" name="numero_ppi" placeholder="Número de PPI">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="documentacion_ppi" class="form-label">Documentación respaldatoria</label>
+                                <input type="file" class="form-control" id="documentacion_ppi" name="documentacion_ppi" accept=".pdf,.jpg,.png">
+                                <small class="text-muted">Adjunte documentación que respalde el PPI</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Datos del padre, madre o tutor -->

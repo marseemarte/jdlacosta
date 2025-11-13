@@ -406,6 +406,67 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Función para manejar el cambio de vínculo y mostrar campos dinámicos
+function handleVinculoChange() {
+    const vinculoSelect = document.getElementById('vinculo');
+    const camposDinamicos = document.getElementById('campos_vinculo_dinamicos');
+    const camposHermano = document.getElementById('campos_hermano');
+    const camposProfesor = document.getElementById('campos_profesor');
+    const camposPPI = document.getElementById('campos_ppi');
+    
+    // Ocultar todos los campos dinámicos primero
+    camposDinamicos.style.display = 'none';
+    camposHermano.style.display = 'none';
+    camposProfesor.style.display = 'none';
+    camposPPI.style.display = 'none';
+    
+    // Hacer opcionales todos los campos dinámicos
+    const camposDinamicosInputs = camposDinamicos.querySelectorAll('input');
+    camposDinamicosInputs.forEach(input => {
+        input.removeAttribute('required');
+    });
+    
+    // Mostrar campos según el vínculo seleccionado
+    const vinculoId = parseInt(vinculoSelect.value);
+    
+    switch (vinculoId) {
+        case 2: // Hermano/a de alumno/a
+            camposDinamicos.style.display = 'block';
+            camposHermano.style.display = 'block';
+            document.getElementById('dni_hermano').setAttribute('required', 'required');
+            document.getElementById('nombre_hermano').setAttribute('required', 'required');
+            break;
+            
+        case 3: // Hijo/a de profesor/a
+            camposDinamicos.style.display = 'block';
+            camposProfesor.style.display = 'block';
+            document.getElementById('dni_profesor').setAttribute('required', 'required');
+            document.getElementById('nombre_profesor').setAttribute('required', 'required');
+            document.getElementById('escuela_profesor').setAttribute('required', 'required');
+            break;
+            
+        case 4: // PPI
+            camposDinamicos.style.display = 'block';
+            camposPPI.style.display = 'block';
+            document.getElementById('numero_ppi').setAttribute('required', 'required');
+            document.getElementById('documentacion_ppi').setAttribute('required', 'required');
+            break;
+            
+        case 1: // Ninguno
+        default:
+            // No mostrar campos adicionales
+            break;
+    }
+}
+
 // Cargar datos cuando se carga la página
-document.addEventListener('DOMContentLoaded', loadFormData);
+document.addEventListener('DOMContentLoaded', function() {
+    loadFormData();
+    
+    // Agregar event listener para el cambio de vínculo
+    const vinculoSelect = document.getElementById('vinculo');
+    if (vinculoSelect) {
+        vinculoSelect.addEventListener('change', handleVinculoChange);
+    }
+});
 
