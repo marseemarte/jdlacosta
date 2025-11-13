@@ -4,6 +4,7 @@ if (!isset($_SESSION['escuela_id'])) {
     header('Location: login.html');
     exit;
 }
+$es_jefatura = isset($_SESSION['es_jefatura']) ? (bool)$_SESSION['es_jefatura'] : false;
 $escuela_id = (int) $_SESSION['escuela_id'];
 require_once __DIR__ . '/api/config.php';
 $pdo = getDBConnection();
@@ -54,8 +55,15 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
 
   <!-- DataTables -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 </head>
 <body>
   <header class="py-3 mb-4 border-bottom">
@@ -65,14 +73,64 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
         <small class="text-muted"><?= htmlspecialchars($esc_nombre) ?></small>
       </div>
       <div class="d-flex align-items-center gap-2">
+        <?php if ($es_jefatura): ?>
+        <a href="#todosInscriptosCard" id="verTodosBtn" class="btn btn-primary btn-sm me-2">
+          <i class="fas fa-list me-1"></i>Ver todos los inscriptos
+        </a>
+        <?php endif; ?>
         <a href="api/logout.php" class="btn btn-outline-danger btn-sm">
-          <i class="fas fa-sign-out-alt me-1"></i>Cerrar sesión
+          <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesion
         </a>
       </div>
     </div>
   </header>
 
   <main class="container mb-5">
+    <?php if ($es_jefatura): ?>
+    <!-- Vista JEFATURA: Tabla de todas las escuelas del distrito -->
+    <div class="card p-4 mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 fw-semibold">Escuelas del Distrito</h5>
+      </div>
+      <div class="table-responsive">
+        <table id="escuelasDistritoTable" class="display table table-striped" style="width:100%">
+          <thead>
+            <tr>
+              <th>Escuela</th>
+              <th>Vacantes</th>
+              <th>Anotados</th>
+              <th>Último Acceso</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Vista JEFATURA: Todos los inscriptos del distrito -->
+    <div id="todosInscriptosCard" class="card p-4 mb-4 d-none">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 fw-semibold">Todos los inscriptos del distrito</h5>
+      </div>
+      <div class="table-responsive">
+        <table id="todosInscriptosTable" class="display table table-striped" style="width:100%">
+          <thead>
+            <tr>
+              <th>DNI</th>
+              <th>Apellido</th>
+              <th>Nombre</th>
+              <th>Vínculo</th>
+              <th>Sorteo</th>
+              <th>Secundaria</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <?php else: ?>
+    <!-- Vista normal de escuela -->
     <div class="row g-3 mb-4">
       <div class="col-md-6">
         <div class="card p-4 info-card h-100">
@@ -247,6 +305,7 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
       </div>
       <?php endif; ?>
     </div>
+    <?php endif; ?>
 
   </main>
 
@@ -278,6 +337,177 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
 
 <script>
 $(document).ready(function(){
+  <?php if ($es_jefatura): ?>
+  // DataTable para escuelas del distrito (vista JEFATURA)
+  var escuelasTable = $('#escuelasDistritoTable').DataTable({
+    ajax: {
+      url: 'api/get_escuelas_distrito.php',
+      dataSrc: 'data'
+    },
+    columns: [
+      { data: 'nombre' },
+      { data: 'vacantes' },
+      { data: 'anotados' },
+      { data: 'ultimo_acceso', defaultContent: '-' },
+      { 
+        data: null, 
+        orderable: false, 
+        render: function (data, type, row) {
+          return `
+            <button class="btn btn-sm btn-success me-1 nomina-btn" data-escuela-id="${row.id}" data-escuela-nombre="${row.nombre}">
+              Nomina inscriptos
+            </button>
+            <button class="btn btn-sm btn-primary me-1 ingresan-btn" data-escuela-id="${row.id}" data-escuela-nombre="${row.nombre}">
+              Ingresan
+            </button>
+            <button class="btn btn-sm btn-danger no-ingresan-btn" data-escuela-id="${row.id}" data-escuela-nombre="${row.nombre}">
+              No ingresan
+            </button>
+          `;
+        }
+      }
+    ],
+    pageLength: 10,
+    lengthChange: true,
+    language: {
+      search: "Buscar:",
+      lengthMenu: "Mostrar _MENU_ entradas por página",
+      info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+      infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+      infoFiltered: "(filtrado de _MAX_ entradas totales)",
+      zeroRecords: "No se encontraron registros",
+      paginate: {
+        previous: "Anterior",
+        next: "Siguiente"
+      }
+    }
+  });
+
+  // Mostrar tabla de todos los inscriptos (distrito)
+  var todosInscriptosInit = false;
+  $('#verTodosBtn').on('click', function(e){
+    e.preventDefault();
+    // Mostrar la tabla de inscriptos y ocultar la de escuelas
+    $('#todosInscriptosCard').removeClass('d-none');
+    $('.card:has(#escuelasDistritoTable)').addClass('d-none');
+    // Scroll hacia la tabla
+    if ($('#todosInscriptosCard').length) {
+      $('html, body').animate({ scrollTop: $('#todosInscriptosCard').offset().top - 80 }, 400);
+    }
+    // Inicializar DataTable solo una vez
+    if (!todosInscriptosInit) {
+      $('#todosInscriptosTable').DataTable({
+        ajax: {
+          url: 'api/get_inscriptos_distrito.php',
+          dataSrc: 'data'
+        },
+        columns: [
+          { data: 'dni' },
+          { data: 'apellido' },
+          { 
+            data: 'nombre',
+            render: function(data, type, row) {
+              return `<a href="#" class="ver-ficha-link" data-dni="${row.dni}">${data}</a>`;
+            }
+          },
+          { data: 'vinculo' },
+          { data: 'orden_sorteo', defaultContent: '-' },
+          { data: 'secundaria' }
+        ],
+        pageLength: 25,
+        lengthChange: true,
+        language: {
+          search: "Buscar:",
+          lengthMenu: "Mostrar _MENU_ entradas por página",
+          info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+          infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+          infoFiltered: "(filtrado de _MAX_ entradas totales)",
+          zeroRecords: "No se encontraron registros",
+          paginate: {
+            previous: "Anterior",
+            next: "Siguiente"
+          }
+        }
+      });
+      todosInscriptosInit = true;
+    }
+  });
+
+  // Handler para abrir ficha desde el nombre
+  $(document).on('click', '.ver-ficha-link', function(e){
+    e.preventDefault();
+    const dni = $(this).data('dni');
+    $('#fichaAlumnoContent').html('<div class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</div>');
+    var modal = new bootstrap.Modal(document.getElementById('modalFichaAlumno'));
+    modal.show();
+    $.getJSON('api/get_ficha_alumno.php?dni=' + encodeURIComponent(dni), function(data) {
+      if (!data.success) {
+        $('#fichaAlumnoContent').html('<div class="alert alert-danger">No se pudo cargar la ficha.</div>');
+        return;
+      }
+      const a = data.alumno || {};
+      const t = data.tutor || {};
+      const alumnoDniFoto = a.foto_dni || a.dni_foto || '';
+      const tutorDniFoto = t.foto_dni || t.dni_foto || '';
+      $('#fichaAlumnoContent').html(`
+        <div class="container-fluid">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h6 class="mb-3 text-primary">Datos del Alumno</h6>
+              <div class="mb-2"><strong>DNI:</strong> <span>${a.dni || ''}</span></div>
+              <div class="mb-2"><strong>Nombre:</strong> <span>${a.nombre || ''}</span></div>
+              <div class="mb-2"><strong>Apellido:</strong> <span>${a.apellido || ''}</span></div>
+              <div class="mb-2"><strong>Fecha de Nacimiento:</strong> <span>${a.fecha || ''}</span></div>
+              <div class="mb-2"><strong>Dirección:</strong> <span>${a.direccion || ''}</span></div>
+              <div class="mb-2"><strong>Localidad:</strong> <span>${a.localidad || ''}</span></div>
+              <div class="mb-2"><strong>Escuela de procedencia:</strong> <span>${a.escuela || ''}</span></div>
+              <div class="mb-2"><strong>Turno de preferencia:</strong> <span>${a.turno || ''}</span></div>
+              <div class="mb-2"><strong>Vínculo con la escuela:</strong> <span>${a.vinculo_nombre || a.vinculo || ''}</span></div>
+              <div class="mb-2"><strong>2da opción:</strong> <span>${a.id_sec2 || ''}</span></div>
+              <div class="mb-2"><strong>3ra opción:</strong> <span>${a.id_sec3 || ''}</span></div>
+              <div class="mb-2"><strong>Fecha inscripción:</strong> <span>${a.fecha_insc || ''}</span></div>
+              <div class="mb-2"><strong>Hora inscripción:</strong> <span>${a.hora_insc || ''}</span></div>
+              ${alumnoDniFoto ? `<div class="mt-3"><strong>Foto DNI Alumno:</strong><div><img src="${alumnoDniFoto}" alt="DNI Alumno" class="img-fluid rounded border" style="max-height:240px;object-fit:contain;"></div></div>` : ''}
+            </div>
+            <div class="col-md-6">
+              <h6 class="mb-3 text-primary">Datos del padre, madre o tutor</h6>
+              <div class="mb-2"><strong>DNI:</strong> <span>${t.dni || ''}</span></div>
+              <div class="mb-2"><strong>Nombre:</strong> <span>${t.nombre || ''} ${t.apellido || ''}</span></div>
+              <div class="mb-2"><strong>Fecha de Nacimiento:</strong> <span>${t.fecha || ''}</span></div>
+              <div class="mb-2"><strong>Teléfono:</strong> <span>${t.telefono || ''}</span></div>
+              <div class="mb-2"><strong>E-Mail:</strong> <span>${t.mail || ''}</span></div>
+              ${t.dni ? '<div class="mt-3 text-muted"><small><i class="fas fa-user-shield me-1"></i>Responsable legal del alumno</small></div>' : '<div class="mt-3 text-muted"><small><i class="fas fa-exclamation-triangle me-1"></i>No se encontraron datos del tutor</small></div>'}
+              ${tutorDniFoto ? `<div class="mt-3"><strong>Foto DNI Tutor:</strong><div><img src="${tutorDniFoto}" alt="DNI Tutor" class="img-fluid rounded border" style="max-height:240px;object-fit:contain;"></div></div>` : ''}
+            </div>
+          </div>
+        </div>
+      `);
+    }).fail(function() {
+      $('#fichaAlumnoContent').html('<div class="alert alert-danger">No se pudo cargar la ficha.</div>');
+    });
+  });
+  // Handlers para los botones de acciones
+  $(document).on('click', '.nomina-btn', function() {
+    var escuelaId = $(this).data('escuela-id');
+    var escuelaNombre = $(this).data('escuela-nombre');
+    // Aquí puedes implementar la funcionalidad para ver la nómina completa
+    alert('Ver nómina de inscriptos de: ' + escuelaNombre + ' (ID: ' + escuelaId + ')');
+  });
+
+  $(document).on('click', '.ingresan-btn', function() {
+    var escuelaId = $(this).data('escuela-id');
+    var escuelaNombre = $(this).data('escuela-nombre');
+    // Redirigir o mostrar modal con alumnos que ingresan
+    window.location.href = 'dashboard_escuela.php?escuela_id=' + escuelaId + '&tipo=ingresan';
+  });
+
+  $(document).on('click', '.no-ingresan-btn', function() {
+    var escuelaId = $(this).data('escuela-id');
+    var escuelaNombre = $(this).data('escuela-nombre');
+    // Redirigir o mostrar modal con alumnos que no ingresan
+    window.location.href = 'dashboard_escuela.php?escuela_id=' + escuelaId + '&tipo=no_ingresan';
+  });
+  <?php else: ?>
   // DataTable para "Ingresan" (trae datos desde API)
   var table = $('#ingresanTable').DataTable({
     ajax: {
@@ -423,8 +653,7 @@ $(document).ready(function(){
   }).fail(function() {
     $('#fichaAlumnoContent').html('<div class="alert alert-danger">No se pudo cargar la ficha.</div>');
   });
-});
-
+  <?php endif; ?>
 });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
