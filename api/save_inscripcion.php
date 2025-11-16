@@ -34,6 +34,33 @@ try {
     $turno = trim($_POST['turno_preferencia'] ?? '');
     $vinculo_id = isset($_POST['vinculo']) ? (int)$_POST['vinculo'] : 0;
 
+    // Datos dinámicos según el vínculo
+    $dni_hermano = '';
+    $nombre_hermano = '';
+    $dni_profesor = '';
+    $nombre_profesor = '';
+    $escuela_profesor = '';
+    $numero_ppi = '';
+    $documentacion_ppi = '';
+
+    // Procesar campos dinámicos según el vínculo
+    if ($vinculo_id == 2) { // Hermano/a de alumno/a
+        $dni_hermano = trim($_POST['dni_hermano'] ?? '');
+        $nombre_hermano = trim($_POST['nombre_hermano'] ?? '');
+    } elseif ($vinculo_id == 3) { // Hijo/a de profesor/a
+        $dni_profesor = trim($_POST['dni_profesor'] ?? '');
+        $nombre_profesor = trim($_POST['nombre_profesor'] ?? '');
+        $escuela_profesor = trim($_POST['escuela_profesor'] ?? '');
+    } elseif ($vinculo_id == 4) { // PPI
+        $numero_ppi = trim($_POST['numero_ppi'] ?? '');
+        // Manejar archivo de documentación PPI
+        if (isset($_FILES['documentacion_ppi']) && $_FILES['documentacion_ppi']['error'] === UPLOAD_ERR_OK) {
+            $ext = pathinfo($_FILES['documentacion_ppi']['name'], PATHINFO_EXTENSION);
+            $documentacion_ppi = 'ppi_' . $dni_estudiante . '_doc.' . $ext;
+            move_uploaded_file($_FILES['documentacion_ppi']['tmp_name'], $uploadDir . $documentacion_ppi);
+        }
+    }
+
     // Datos del tutor
     $dni_tutor = trim($_POST['dni_tutor'] ?? '');
     $nombre_tutor = trim($_POST['nombre_tutor'] ?? '');
@@ -49,6 +76,21 @@ try {
 
     if (empty($dni_tutor) || empty($nombre_tutor) || empty($apellido_tutor)) {
         throw new Exception('Faltan datos obligatorios del tutor');
+    }
+
+    // Validaciones de campos dinámicos según el vínculo
+    if ($vinculo_id == 2) { // Hermano/a de alumno/a
+        if (empty($dni_hermano) || empty($nombre_hermano)) {
+            throw new Exception('Faltan datos del hermano/a (DNI y nombre)');
+        }
+    } elseif ($vinculo_id == 3) { // Hijo/a de profesor/a
+        if (empty($dni_profesor) || empty($nombre_profesor) || empty($escuela_profesor)) {
+            throw new Exception('Faltan datos del profesor/a (DNI, nombre y escuela)');
+        }
+    } elseif ($vinculo_id == 4) { // PPI
+        if (empty($numero_ppi) || empty($documentacion_ppi)) {
+            throw new Exception('Faltan datos del PPI (número y documentación)');
+        }
     }
 
     // Obtener nombre de la localidad
@@ -138,8 +180,8 @@ try {
         fecha_insc, hora_insc, id_sec2, id_sec3
     ) VALUES (
         :dni, :apellido, :nombre, :fecha, :direccion, :localidad, :escuela, :vinculo,
-        0, 0, :id_secundaria, 0, 0, '0',
-        '0', 0, '0', :turno, 0, 0,
+        0, 0, :id_secundaria, 0, :dni_hermano, :nombre_hermano,
+        '0', :dni_profesor, :nombre_profesor, :turno, 0, 0,
         CURDATE(), CURTIME(), :id_sec2, :id_sec3
     )");
     
@@ -153,6 +195,10 @@ try {
         ':escuela' => $escuela_procedencia_nombre,
         ':vinculo' => $vinculo_id,
         ':id_secundaria' => $escuela_id,
+        ':dni_hermano' => $dni_hermano,
+        ':nombre_hermano' => $nombre_hermano,
+        ':dni_profesor' => $dni_profesor,
+        ':nombre_profesor' => $nombre_profesor,
         ':turno' => $turno,
         ':id_sec2' => $segunda_opcion > 0 ? $segunda_opcion : 0,
         ':id_sec3' => $tercera_opcion > 0 ? $tercera_opcion : 0

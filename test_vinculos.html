@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Vínculos API</title>
+</head>
+<body>
+    <h1>Test API Vínculos</h1>
+    <div id="resultado"></div>
+    
+    <script>
+        fetch('api/get_vinculos.php')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('resultado').innerHTML = 
+                    '<h2>Respuesta del API:</h2>' +
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                document.getElementById('resultado').innerHTML = 
+                    '<h2>Error:</h2>' +
+                    '<pre>' + error + '</pre>';
+            });
+    </script>
+</body>
+</html>
