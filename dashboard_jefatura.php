@@ -49,6 +49,9 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
         <small class="text-muted"><?= htmlspecialchars($esc_nombre) ?></small>
       </div>
       <div class="d-flex align-items-center gap-2">
+        <a href="inscriptos_nuevos.php" class="btn btn-outline-primary btn-sm">
+          <i class="fa-solid fa-list"></i> Ver todos los inscriptos
+        </a>
         <a href="api/logout.php" class="btn btn-outline-danger btn-sm">
           <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesion
         </a>
