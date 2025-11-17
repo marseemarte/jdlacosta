@@ -204,28 +204,7 @@
     </footer>
 
 <script>
-// Datos de localidades
-const localidades = {
-    1: 'La Costa',
-    2: 'Mar de Ajó',
-    3: 'Santa Teresita',
-    4: 'Mar del Tuyú',
-    5: 'Nueva Brighton',
-    6: 'Costa Esmeralda',
-    8: 'Punta Medanos',
-    10: 'Costa del Este',
-    11: 'Mar del Plata',
-    16: 'Pinamar',
-    17: 'Valeria del Mar',
-    18: 'General Madariaga',
-    19: 'Ayacucho',
-    20: 'Lanús',
-    21: 'Puán',
-    22: 'Balcarce',
-    23: 'Villa Gesell',
-    24: 'Mar Chiquita',
-    26: 'Frontera'
-};
+// Localidades: cargadas desde la base de datos junto con cada escuela
 
 let escuelas = [];
 
