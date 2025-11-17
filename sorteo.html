@@ -6,11 +6,13 @@
     <title>Ver Sorteo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { background-color: #f5f5f5; }
         .container-sorteo { margin-top: 30px; max-width: 1000px; }
         .section { background: white; padding: 20px; border-radius: 5px; margin-bottom: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .select-school { margin-bottom: 20px; }
+        .info-vacantes { background-color: #e7f3ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #2196F3; }
     </style>
 </head>
 <body>
@@ -22,34 +24,65 @@
 </nav>
 
 <div class="container-sorteo">
-    <div class="section">
-        <h5>Seleccionar Escuela Secundaria</h5>
-        <div class="row select-school">
-            <div class="col-md-8">
-                <select id="selectEscuela" class="form-select">
-                    <option value="">-- Seleccionar --</option>
-                </select>
-            </div>
+    <!-- Sección para ingresar número de sorteo (si no existe) -->
+    <div class="section" id="seccionIngresoNumero" style="display:none;">
+        <h5 class="mb-4">Ingrese el Número de Sorteo</h5>
+        <p class="text-muted">Este número será utilizado para todas las escuelas del distrito.</p>
+        <div class="row">
             <div class="col-md-4">
-                <button class="btn btn-primary" onclick="cargarSorteo()">Ver Sorteo</button>
+                <input type="text" id="inputNumeroSorteoInicial" class="form-control form-control-lg" placeholder="Número (3 dígitos)" maxlength="3" inputmode="numeric">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary btn-lg" onclick="guardarNumeroSorteoInicial()">Guardar</button>
             </div>
         </div>
     </div>
 
-    <div class="section" id="seccionSorteo" style="display:none;">
-        <h5 id="tituloEscuela"></h5>
-        <table id="tablaSorteo" class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Orden</th>
-                    <th>Apellido</th>
-                    <th>Nombre</th>
-                    <th>DNI</th>
-                    <th>Vínculo</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+    <!-- Sección principal (se muestra después de guardar número o si ya existe) -->
+    <div id="seccionPrincipal" style="display:none;">
+        <div class="section">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="mb-0">Número de Sorteo Actual: <strong id="numeroSorteoActual">-</strong></h5>
+                    <small class="text-muted">Seleccione una escuela para ver el orden de sorteo</small>
+                </div>
+                <button class="btn btn-warning btn-sm" onclick="cambiarNumeroSorteo()">
+                    <i class="fas fa-edit me-1"></i>Cambiar Número
+                </button>
+            </div>
+            <div class="row select-school">
+                <div class="col-md-12">
+                    <select id="selectEscuela" class="form-select">
+                        <option value="">-- Seleccionar Escuela --</option>
+                    </select>
+                </div>
+            </div>
+            <div id="infVacantes" class="info-vacantes" style="display:none; margin-top: 20px;">
+                <strong>Información de Vacantes:</strong><br>
+                Vacantes totales: <span id="vacantesTotales">-</span> | 
+                Ingresados por vínculo: <span id="ingresadosVinculo">-</span> | 
+                Vacantes para sorteo: <span id="vacantesVinculo" style="color: #d32f2f; font-weight: bold;">-</span>
+            </div>
+        </div>
+
+        <div class="section" id="seccionSorteo" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 id="tituloEscuela" class="mb-0"></h5>
+            </div>
+            <table id="tablaSorteo" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Orden</th>
+                        <th>Últimos 3 dígitos</th>
+                        <th>Apellido</th>
+                        <th>Nombre</th>
+                        <th>DNI</th>
+                        <th>Vínculo</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -60,6 +93,124 @@
 <script>
 let tabla;
 let vinculosMap = {};
+let numeroSorteoActual = null;
+
+// Al cargar la página, verificar si existe un número de sorteo
+function verificarNumeroSorteo() {
+    $.ajax({
+        url: 'api/get_numero_sorteo.php',
+        method: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response && response.numero) {
+                // Ya existe número de sorteo
+                numeroSorteoActual = response.numero;
+                $('#numeroSorteoActual').text(numeroSorteoActual);
+                $('#seccionIngresoNumero').hide();
+                $('#seccionPrincipal').show();
+                cargarEscuelas();
+                cargarVinculos();
+            } else {
+                // No existe número, mostrar formulario
+                $('#seccionIngresoNumero').show();
+                $('#seccionPrincipal').hide();
+            }
+        }
+    });
+}
+
+// Guardar número de sorteo inicial
+function guardarNumeroSorteoInicial() {
+    const numero = $('#inputNumeroSorteoInicial').val().trim();
+    
+    if (!numero) {
+        Swal.fire('Error', 'Ingrese el número de sorteo', 'error');
+        return;
+    }
+    
+    if (!/^\d{3}$/.test(numero)) {
+        Swal.fire('Error', 'El número debe ser exactamente 3 dígitos', 'error');
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Confirmar',
+        text: '¿Desea guardar el número de sorteo: ' + numero + '?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+        
+        $.ajax({
+            url: 'api/guardar_numero_sorteo_nuevo.php',
+            method: 'POST',
+            data: { numero_sorteo: numero },
+            dataType: 'json'
+        }).done(function(resp) {
+            if (resp && resp.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Guardado',
+                    text: 'El número de sorteo es: ' + numero + '\n\nSe ha aplicado a todas las escuelas',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    numeroSorteoActual = numero;
+                    $('#numeroSorteoActual').text(numeroSorteoActual);
+                    $('#seccionIngresoNumero').hide();
+                    $('#seccionPrincipal').show();
+                    cargarEscuelas();
+                    cargarVinculos();
+                });
+            } else {
+                Swal.fire('Error', resp && resp.message ? resp.message : 'No se pudo guardar', 'error');
+            }
+        }).fail(function() {
+            Swal.fire('Error', 'Error al guardar', 'error');
+        });
+    });
+}
+
+// Cambiar número de sorteo
+function cambiarNumeroSorteo() {
+    Swal.fire({
+        title: 'Cambiar Número de Sorteo',
+        input: 'text',
+        inputLabel: 'Nuevo número (3 dígitos)',
+        inputPlaceholder: 'Ejemplo: 326',
+        inputAttributes: {
+            maxlength: 3,
+            inputmode: 'numeric'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Guardar',
+        cancelButtonText: 'Cancelar',
+        inputValidator: (value) => {
+            if (!value) return 'Ingrese un número'
+            if (!/^\d{3}$/.test(value)) return 'Debe ser exactamente 3 dígitos'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'api/guardar_numero_sorteo_nuevo.php',
+                method: 'POST',
+                data: { numero_sorteo: result.value },
+                dataType: 'json'
+            }).done(function(resp) {
+                if (resp && resp.success) {
+                    Swal.fire('Guardado', 'Número actualizado a: ' + result.value, 'success');
+                    numeroSorteoActual = result.value;
+                    $('#numeroSorteoActual').text(numeroSorteoActual);
+                    // Recargar datos
+                    cargarEscuelas();
+                } else {
+                    Swal.fire('Error', resp && resp.message ? resp.message : 'No se pudo guardar', 'error');
+                }
+            });
+        }
+    });
+}
 
 // Cargar escuelas
 function cargarEscuelas() {
@@ -95,13 +246,36 @@ function cargarVinculos() {
     });
 }
 
-function cargarSorteo() {
-    const escuelaId = $('#selectEscuela').val();
-    
-    if (!escuelaId) {
-        alert('Seleccione una escuela');
-        return;
+// Obtener información de vacantes
+function cargarInfoVacantes(escuelaId) {
+    $.ajax({
+        url: 'api/get_vacantes_sorteo.php',
+        method: 'GET',
+        data: { id_secundaria: escuelaId },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                $('#vacantesTotales').text(response.vacantes_totales);
+                $('#ingresadosVinculo').text(response.ingresados_vinculo);
+                $('#vacantesVinculo').text(response.vacantes_sorteo);
+                $('#infVacantes').show();
+            }
+        }
+    });
+}
+
+// Cargar sorteo al seleccionar escuela
+$('#selectEscuela').on('change', function() {
+    const escuelaId = $(this).val();
+    if (escuelaId) {
+        cargarSorteo(escuelaId);
     }
+});
+
+function cargarSorteo(escuelaId) {
+    if (!escuelaId) return;
+    
+    cargarInfoVacantes(escuelaId);
     
     $.ajax({
         url: 'api/get_sorteo.php',
@@ -113,11 +287,32 @@ function cargarSorteo() {
                 const escuelaNombre = $('#selectEscuela option:selected').text();
                 $('#tituloEscuela').text('Sorteo: ' + escuelaNombre);
                 
+                let datosAlumnos = response.data.map(a => {
+                    const ultimos3 = a.dni.slice(-3);
+                    return {
+                        ...a,
+                        ultimos3: ultimos3
+                    };
+                });
+                
+                // Ordenar por últimos 3 dígitos >= número ingresado
+                const numFiltro = parseInt(numeroSorteoActual, 10);
+                datosAlumnos.sort((a, b) => {
+                    const numA = parseInt(a.ultimos3, 10);
+                    const numB = parseInt(b.ultimos3, 10);
+                    
+                    if (numA >= numFiltro && numB >= numFiltro) return numA - numB;
+                    if (numA >= numFiltro) return -1;
+                    if (numB >= numFiltro) return 1;
+                    return numA - numB;
+                });
+                
                 let html = '';
-                response.data.forEach((a, i) => {
+                datosAlumnos.forEach((a, i) => {
                     const vinculo = vinculosMap[a.vinculo] || 'N/A';
                     html += `<tr>
                         <td>${i + 1}</td>
+                        <td>${a.ultimos3}</td>
                         <td>${a.apellido}</td>
                         <td>${a.nombre}</td>
                         <td>${a.dni}</td>
@@ -144,8 +339,7 @@ function cargarSorteo() {
 }
 
 $(document).ready(function() {
-    cargarEscuelas();
-    cargarVinculos();
+    verificarNumeroSorteo();
 });
 </script>
 </body>
