@@ -148,6 +148,7 @@
                     <div class="col-md-6 mb-3">
                         <label for="dni_estudiante" class="form-label">DNI</label>
                         <input type="text" class="form-control" id="dni_estudiante" name="dni_estudiante" placeholder="DNI" required>
+                        <small class="text-danger error-message" id="error-dni" style="display:none;"></small>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="apellido_estudiante" class="form-label">Apellido</label>
@@ -278,6 +279,7 @@
                     <div class="col-md-6 mb-3">
                         <label for="dni_tutor" class="form-label">DNI</label>
                         <input type="text" class="form-control" id="dni_tutor" name="dni_tutor" placeholder="DNI" required>
+                        <small class="text-danger error-message" id="error-dni-tutor" style="display:none;"></small>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="nombre_tutor" class="form-label">Nombre</label>
@@ -358,6 +360,7 @@
 
     <!-- Tesseract.js para OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+    <script src="js/validaciones_simples.js"></script>
     <script src="js/inscripcion.js"></script>
 </body>
 </html>

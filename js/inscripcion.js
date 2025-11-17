@@ -1,14 +1,41 @@
-// Obtener el ID de la escuela desde la URL
-const urlParams = new URLSearchParams(window.location.search);
-const escuelaId = urlParams.get('escuela_id');
+// Obtener datos del alumno desde sesión
+let alumnoData = null;
 
-if (!escuelaId) {
-    alert('No se ha seleccionado una escuela. Redirigiendo...');
-    window.location.href = 'index.html';
+async function obtenerDatosAlumno() {
+    try {
+        const res = await fetch('api/get_alumno_sesion.php', {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        
+        if (data.success && data.alumno) {
+            alumnoData = data.alumno;
+            
+            // Auto-completar campos del estudiante
+            document.getElementById('dni_estudiante').value = alumnoData.dni || '';
+            document.getElementById('apellido_estudiante').value = alumnoData.apellido || '';
+            document.getElementById('nombre_estudiante').value = alumnoData.nombre || '';
+            document.getElementById('escuela_id').value = alumnoData.id_secundaria || '';
+            
+            // Ahora cargar los datos del formulario (dropdowns, etc)
+            await loadFormData();
+            
+            return true;
+        } else {
+            alert('No se encontraron datos del alumno. Vuelve a iniciar sesión.');
+            window.location.href = 'login_inscripcion.html';
+            return false;
+        }
+    } catch (e) {
+        console.error('Error al obtener datos del alumno:', e);
+        alert('Error al cargar datos del alumno');
+        return false;
+    }
 }
 
-// Establecer el ID de la escuela en el formulario
-document.getElementById('escuela_id').value = escuelaId;
+// Esperar a que el DOM esté listo antes de cargar datos
+document.addEventListener('DOMContentLoaded', obtenerDatosAlumno);
 
 // Cargar datos para los dropdowns
 async function loadFormData() {
@@ -81,6 +108,26 @@ async function loadFormData() {
 // Manejar el envío del formulario
 document.getElementById('inscripcionForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    
+    // Validar DNI del estudiante
+    const dniEstudiante = document.getElementById('dni_estudiante').value.trim();
+    if (!validarDNI(dniEstudiante)) {
+        document.getElementById('error-dni').textContent = 'DNI debe tener 7-8 dígitos';
+        document.getElementById('error-dni').style.display = 'block';
+        return;
+    } else {
+        document.getElementById('error-dni').style.display = 'none';
+    }
+    
+    // Validar DNI del tutor
+    const dniTutor = document.getElementById('dni_tutor').value.trim();
+    if (!validarDNI(dniTutor)) {
+        document.getElementById('error-dni-tutor').textContent = 'DNI debe tener 7-8 dígitos';
+        document.getElementById('error-dni-tutor').style.display = 'block';
+        return;
+    } else {
+        document.getElementById('error-dni-tutor').style.display = 'none';
+    }
     
     const formData = new FormData(this);
     const submitBtn = this.querySelector('button[type="submit"]');
@@ -333,8 +380,12 @@ async function scanDNI(inputId, tipo, campos) {
     }
 }
 
-// Configurar previews y botones de escaneo
-document.addEventListener('DOMContentLoaded', function() {
+// Cargar datos cuando se carga la página
+document.addEventListener('DOMContentLoaded', async function() {
+    // 1. Primero obtener datos del alumno desde sesión
+    await obtenerDatosAlumno();
+    
+    // 2. Configurar previews y botones de escaneo
     // Preview de imágenes del estudiante
     showImagePreview('dni_frente_estudiante', 'preview_frente_estudiante', 'btn_scan_frente_estudiante');
     showImagePreview('dni_reverso_estudiante', 'preview_reverso_estudiante', 'btn_scan_reverso_estudiante');

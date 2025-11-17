@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar Vínculos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        body { background-color: #f5f5f5; }
+        .container-admin { margin-top: 30px; max-width: 900px; }
+        .form-section { background: white; padding: 20px; border-radius: 5px; margin-bottom: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .btn-custom { margin-right: 5px; }
+        table { background: white; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand"><i class="fas fa-link"></i> Administración de Vínculos</span>
+        <a href="dashboard_jefatura.php" class="btn btn-outline-light btn-sm">Volver</a>
+    </div>
+</nav>
+
+<div class="container-admin">
+    <!-- Agregar Vínculo -->
+    <div class="form-section">
+        <h5>Agregar Nuevo Vínculo</h5>
+        <form id="formAgregar">
+            <div class="row">
+                <div class="col-md-8">
+                    <input type="text" id="vinculoNuevo" class="form-control" placeholder="Ej: Alumno de años anteriores">
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-primary btn-custom" onclick="agregarVinculo()">Agregar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de Vínculos -->
+    <div class="form-section">
+        <h5>Vínculos Existentes</h5>
+        <table id="tablaVinculos" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Vínculo</th>
+                    <th>Visible</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script>
+let tabla;
+
+function cargarVinculos() {
+    $.ajax({
+        url: 'api/get_vinculos_admin.php',
+        method: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                let html = '';
+                response.data.forEach(v => {
+                    html += `<tr>
+                        <td>${v.id}</td>
+                        <td>${v.vinculo}</td>
+                        <td>${v.visible ? 'Sí' : 'No'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning btn-custom" onclick="editarVinculo(${v.id}, '${v.vinculo}')">Editar</button>
+                            <button class="btn btn-sm btn-danger btn-custom" onclick="eliminarVinculo(${v.id})">Eliminar</button>
+                        </td>
+                    </tr>`;
+                });
+                $('#tablaVinculos tbody').html(html);
+                if (tabla) tabla.destroy();
+                tabla = $('#tablaVinculos').DataTable({
+                    pageLength: 10,
+                    language: {
+                        search: "Buscar:",
+                        lengthMenu: "Mostrar _MENU_ entradas",
+                        info: "Mostrando _START_ a _END_ de _TOTAL_",
+                        paginate: { previous: "Anterior", next: "Siguiente" }
+                    }
+                });
+            }
+        }
+    });
+}
+
+function agregarVinculo() {
+    const vinculo = $('#vinculoNuevo').val().trim();
+    
+    if (!vinculo) {
+        Swal.fire('Error', 'Ingrese un vínculo', 'error');
+        return;
+    }
+    
+    $.ajax({
+        url: 'api/crear_vinculo.php',
+        method: 'POST',
+        data: { vinculo: vinculo },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                Swal.fire('Éxito', 'Vínculo creado', 'success');
+                $('#vinculoNuevo').val('');
+                cargarVinculos();
+            } else {
+                Swal.fire('Error', response.error, 'error');
+            }
+        }
+    });
+}
+
+function editarVinculo(id, vinculoActual) {
+    Swal.fire({
+        title: 'Editar Vínculo',
+        input: 'text',
+        inputValue: vinculoActual,
+        showCancelButton: true,
+        confirmButtonText: 'Guardar'
+    }).then(result => {
+        if (result.isConfirmed && result.value) {
+            $.ajax({
+                url: 'api/editar_vinculo.php',
+                method: 'POST',
+                data: { id: id, vinculo: result.value },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Éxito', 'Vínculo actualizado', 'success');
+                        cargarVinculos();
+                    } else {
+                        Swal.fire('Error', response.error, 'error');
+                    }
+                }
+            });
+        }
+    });
+}
+
+function eliminarVinculo(id) {
+    Swal.fire({
+        title: 'Confirmar',
+        text: '¿Eliminar este vínculo?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar'
+    }).then(result => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'api/eliminar_vinculo.php',
+                method: 'POST',
+                data: { id: id },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Éxito', 'Vínculo eliminado', 'success');
+                        cargarVinculos();
+                    } else {
+                        Swal.fire('Error', response.error, 'error');
+                    }
+                }
+            });
+        }
+    });
+}
+
+$(document).ready(function() {
+    cargarVinculos();
+});
+</script>
+</body>
+</html>

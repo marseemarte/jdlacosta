@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscripción - Secundaria 2025</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .login-container {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .school-selector {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .school-selector h5 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .school-info {
+            background: #e8eef7;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .school-info.show {
+            display: block;
+        }
+
+        .school-info h4 {
+            color: #667eea;
+            margin: 0 0 5px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .school-info p {
+            color: #666;
+            margin: 3px 0;
+            font-size: 0.95rem;
+        }
+
+        .intro-text {
+            text-align: center;
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-select, .form-control {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            font-size: 1rem;
+        }
+
+        .form-select:focus, .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            border: none;
+            padding: 10px;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover {
+            background: #764ba2;
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .site-footer {
+            margin-top: 30px;
+            padding: 14px 0;
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .spinner-border {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column">
+    <main class="d-flex align-items-center justify-content-center flex-grow-1">
+        <div class="login-container">
+            <h1>Inscripción Secundaria 2025</h1>
+            
+            <p class="intro-text">
+                Selecciona tu escuela y luego ingresa el DNI sin puntos del estudiante
+            </p>
+
+            <div id="errorMsg" class="error-message" role="alert"></div>
+
+            <form id="loginForm" class="needs-validation" novalidate>
+                <!-- Selector de escuela -->
+                <div class="school-selector">
+                    <label for="escuela" class="form-label">
+                        <i class="fas fa-school me-2"></i>Selecciona tu Escuela
+                    </label>
+                    <select id="escuela" class="form-select" required>
+                        <option value="">-- Cargando escuelas --</option>
+                    </select>
+                </div>
+
+                <!-- Información de la escuela seleccionada -->
+                <div id="schoolInfo" class="school-info">
+                    <h4 id="schoolName"></h4>
+                    <p id="schoolLocation"></p>
+                </div>
+
+                <!-- DNI del estudiante -->
+                <div class="form-group mb-3" id="dniSection" style="display: none;">
+                    <label for="dni" class="form-label">Ingrese el DNI, sin puntos, del estudiante</label>
+                    <input type="text" id="dni" name="dni" class="form-control" placeholder="ej: 12345678" inputmode="numeric" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100" id="submitBtn" disabled>
+                    <i class="fas fa-arrow-right me-2"></i>Continuar
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            © 2025 JDLacosta - Todos los derechos reservados.
+        </div>
+    </footer>
+
+<script>
+// Datos de localidades (mapeado de la BD)
+const localidades = {
+    1: 'La Costa',
+    2: 'Mar de Ajó',
+    3: 'Santa Teresita',
+    4: 'Mar del Tuyú',
+    5: 'Nueva Brighton',
+    6: 'Costa Esmeralda',
+    8: 'Punta Medanos',
+    10: 'Costa del Este',
+    11: 'Mar del Plata',
+    16: 'Pinamar',
+    17: 'Valeria del Mar',
+    18: 'General Madariaga',
+    19: 'Ayacucho',
+    20: 'Lanús',
+    21: 'Puán',
+    22: 'Balcarce',
+    23: 'Villa Gesell',
+    24: 'Mar Chiquita',
+    26: 'Frontera'
+};
+
+// Lista de escuelas (sin Jefaturas)
+const escuelas = [
+    // La Costa
+    {id: 1, nombre: 'Escuela de Educación Secundaria N° 3', localidad_id: 1, localidad: 'La Costa'},
+    {id: 2, nombre: 'Escuela de Educación Secundaria N° 7', localidad_id: 2, localidad: 'Mar de Ajó'},
+    {id: 3, nombre: 'Escuela de Educación Secundaria Técnica N° 1', localidad_id: 4, localidad: 'Mar del Tuyú'},
+    {id: 4, nombre: 'Escuela de Educación Secundaria N° 2', localidad_id: 4, localidad: 'Mar del Tuyú'},
+    {id: 5, nombre: 'Escuela de Educación Secundaria N° 12', localidad_id: 4, localidad: 'Mar del Tuyú'},
+    {id: 6, nombre: 'Escuela de Educación Secundaria N° 13', localidad_id: 5, localidad: 'Nueva Brighton'},
+    {id: 7, nombre: 'Escuela de Educación Secundaria N° 14', localidad_id: 8, localidad: 'Punta Medanos'},
+    {id: 8, nombre: 'Escuela de Educación Secundaria N° 4', localidad_id: 10, localidad: 'Costa del Este'},
+    {id: 9, nombre: 'Escuela de Educación Secundaria Técnica N° 2', localidad_id: 11, localidad: 'Mar del Plata'},
+    {id: 10, nombre: 'Escuela de Educación Secundaria N° 1', localidad_id: 11, localidad: 'Mar del Plata'},
+    {id: 11, nombre: 'Escuela de Educación Secundaria N° 8', localidad_id: 11, localidad: 'Mar del Plata'},
+    {id: 12, nombre: 'Escuela de Educación Secundaria N° 10', localidad_id: 11, localidad: 'Mar del Plata'},
+    {id: 13, nombre: 'Escuela de Educación Secundaria N° 11', localidad_id: 11, localidad: 'Mar del Plata'},
+    {id: 16, nombre: 'Escuela de Educación Secundaria N° 9', localidad_id: 11, localidad: 'Mar del Plata'},
+    // Madariaga
+    {id: 17, nombre: 'Escuela de Educación Secundaria N° 1', localidad_id: 18, localidad: 'General Madariaga'},
+    {id: 18, nombre: 'Escuela de Educación Secundaria N° 3', localidad_id: 18, localidad: 'General Madariaga'},
+    {id: 19, nombre: 'Escuela de Educación Secundaria N° 2', localidad_id: 18, localidad: 'General Madariaga'},
+    {id: 33, nombre: 'Escuela de Educación Secundaria N° 5', localidad_id: 18, localidad: 'General Madariaga'},
+    {id: 36, nombre: 'Escuela de Educación Secundaria N° 4', localidad_id: 18, localidad: 'General Madariaga'},
+    {id: 39, nombre: 'Escuela de Educación Secundaria N° 6', localidad_id: 18, localidad: 'General Madariaga'},
+    {id: 47, nombre: 'Escuela de Educación Secundaria N° 6 Anexo 1', localidad_id: 26, localidad: 'Frontera'},
+    {id: 48, nombre: 'Escuela de Educación Secundaria Técnica N° 1', localidad_id: 18, localidad: 'General Madariaga'},
+    {id: 49, nombre: 'Escuela de Educación Secundaria Agraria N° 1', localidad_id: 18, localidad: 'General Madariaga'},
+    // Ayacucho
+    {id: 20, nombre: 'Escuela de Educación Secundaria Técnica N° 1', localidad_id: 19, localidad: 'Ayacucho'},
+    {id: 21, nombre: 'Escuela de Educación Secundaria Agraria N° 1', localidad_id: 19, localidad: 'Ayacucho'},
+    {id: 22, nombre: 'Escuela de Educación Secundaria N° 1', localidad_id: 19, localidad: 'Ayacucho'},
+    {id: 23, nombre: 'Escuela de Educación Secundaria N° 2', localidad_id: 20, localidad: 'Lanús'},
+    {id: 24, nombre: 'Escuela de Educación Secundaria N° 3', localidad_id: 21, localidad: 'Puán'},
+    {id: 25, nombre: 'Escuela de Educación Secundaria N° 5', localidad_id: 19, localidad: 'Ayacucho'},
+    {id: 26, nombre: 'Escuela de Educación Secundaria N° 7', localidad_id: 22, localidad: 'Balcarce'},
+    {id: 27, nombre: 'Escuela de Educación Secundaria N° 8', localidad_id: 19, localidad: 'Ayacucho'},
+    {id: 28, nombre: 'Escuela de Educación Secundaria N° 9', localidad_id: 19, localidad: 'Ayacucho'},
+    {id: 44, nombre: 'Escuela de Educación Secundaria N° 6', localidad_id: 19, localidad: 'Ayacucho'},
+    {id: 46, nombre: 'Colegio Nuestra Sra del Buen Consejo', localidad_id: 19, localidad: 'Ayacucho'},
+    {id: 55, nombre: 'Escuela de Educación Secundaria N° 4', localidad_id: 19, localidad: 'Ayacucho'},
+    // Pinamar
+    {id: 29, nombre: 'Escuela de Educación Secundaria N° 1', localidad_id: 16, localidad: 'Pinamar'},
+    {id: 30, nombre: 'Escuela de Educación Secundaria N° 5', localidad_id: 16, localidad: 'Pinamar'},
+    {id: 31, nombre: 'Escuela de Educación Secundaria N° 3', localidad_id: 16, localidad: 'Pinamar'},
+    {id: 32, nombre: 'Escuela de Educación Secundaria N° 2', localidad_id: 17, localidad: 'Valeria del Mar'},
+    {id: 43, nombre: 'Escuela de Educación Secundaria Técnica N° 1', localidad_id: 16, localidad: 'Pinamar'},
+    {id: 45, nombre: 'Escuela de Educación Secundaria N° 4', localidad_id: 16, localidad: 'Pinamar'},
+    // Villa Gesell
+    {id: 34, nombre: 'Escuela de Educación Secundaria N° 3', localidad_id: 23, localidad: 'Villa Gesell'},
+    {id: 35, nombre: 'Escuela de Educación Secundaria N° 4', localidad_id: 23, localidad: 'Villa Gesell'},
+    {id: 37, nombre: 'Escuela de Educación Secundaria N° 1', localidad_id: 23, localidad: 'Villa Gesell'},
+    {id: 38, nombre: 'Escuela de Educación Secundaria N° 2', localidad_id: 23, localidad: 'Villa Gesell'},
+    {id: 40, nombre: 'Escuela de Educación Secundaria Técnica N° 1', localidad_id: 23, localidad: 'Villa Gesell'},
+    {id: 41, nombre: 'Escuela de Educación Secundaria N° 5', localidad_id: 23, localidad: 'Villa Gesell'},
+    {id: 42, nombre: 'Escuela de Educación Secundaria N° 6', localidad_id: 23, localidad: 'Villa Gesell'}
+];
+
+// Cargar escuelas en el select
+function cargarEscuelas() {
+    const select = document.getElementById('escuela');
+    select.innerHTML = '<option value="">-- Selecciona una escuela --</option>';
+    
+    escuelas.forEach(escuela => {
+        const option = document.createElement('option');
+        option.value = escuela.id;
+        option.textContent = `${escuela.nombre} (${escuela.localidad})`;
+        select.appendChild(option);
+    });
+}
+
+// Cambiar cuando selecciona escuela
+document.getElementById('escuela').addEventListener('change', function() {
+    const escuelaId = this.value;
+    const schoolInfo = document.getElementById('schoolInfo');
+    const dniSection = document.getElementById('dniSection');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    
+    errorMsg.classList.remove('show');
+    
+    if (!escuelaId) {
+        schoolInfo.classList.remove('show');
+        dniSection.style.display = 'none';
+        submitBtn.disabled = true;
+        return;
+    }
+    
+    const escuela = escuelas.find(e => e.id == escuelaId);
+    if (escuela) {
+        document.getElementById('schoolName').textContent = escuela.nombre;
+        document.getElementById('schoolLocation').textContent = escuela.localidad;
+        schoolInfo.classList.add('show');
+        dniSection.style.display = 'block';
+        submitBtn.disabled = false;
+        
+        // Limpiar DNI anterior
+        document.getElementById('dni').value = '';
+        document.getElementById('dni').focus();
+    }
+});
+
+// Enviar formulario
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const escuelaId = document.getElementById('escuela').value;
+    const dni = document.getElementById('dni').value.trim();
+    const errorMsg = document.getElementById('errorMsg');
+    
+    errorMsg.classList.remove('show');
+    
+    // Validar DNI
+    if (!dni) {
+        errorMsg.textContent = 'Ingrese el DNI del estudiante';
+        errorMsg.classList.add('show');
+        return;
+    }
+    
+    const dni_limpio = dni.replace(/[^0-9]/g, '');
+    if (dni_limpio.length < 7 || dni_limpio.length > 8) {
+        errorMsg.textContent = 'DNI debe tener entre 7 y 8 dígitos';
+        errorMsg.classList.add('show');
+        return;
+    }
+    
+    if (!escuelaId) {
+        errorMsg.textContent = 'Selecciona una escuela';
+        errorMsg.classList.add('show');
+        return;
+    }
+    
+    // Cambiar botón a estado de carga
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>Buscando...';
+    
+    try {
+        // Enviar a PHP para guardar en sesión y buscar alumno
+        const fd = new FormData();
+        fd.append('dni', dni_limpio);
+        fd.append('id_secundaria', escuelaId);
+        
+        const res = await fetch('api/buscar_alumno.php', {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        
+        const text = await res.text();
+        let json;
+        
+        try {
+            json = JSON.parse(text);
+        } catch (parseErr) {
+            errorMsg.textContent = 'Error en la respuesta del servidor';
+            errorMsg.classList.add('show');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-arrow-right me-2"></i>Continuar';
+            return;
+        }
+        
+        if (res.ok && json.success) {
+            // Redirigir a inscripción
+            window.location.href = 'inscripcion.html';
+        } else {
+            errorMsg.textContent = json.message || 'Error al procesar la solicitud';
+            errorMsg.classList.add('show');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-arrow-right me-2"></i>Continuar';
+        }
+    } catch (e) {
+        errorMsg.textContent = 'Error de conexión al servidor';
+        errorMsg.classList.add('show');
+        console.error(e);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-arrow-right me-2"></i>Continuar';
+    }
+});
+
+// Cargar escuelas al iniciar
+cargarEscuelas();
+</script>
+</body>
+</html>

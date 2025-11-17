@@ -52,6 +52,12 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
         <a href="inscriptos_nuevos.php" class="btn btn-outline-primary btn-sm">
           <i class="fa-solid fa-list"></i> Ver todos los inscriptos
         </a>
+        <a href="vinculos.html" class="btn btn-outline-warning btn-sm">
+          <i class="fas fa-link"></i> Vínculos
+        </a>
+        <a href="sorteo.html" class="btn btn-outline-info btn-sm">
+          <i class="fas fa-dice"></i> Sorteo
+        </a>
         <a href="api/logout.php" class="btn btn-outline-danger btn-sm">
           <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesion
         </a>

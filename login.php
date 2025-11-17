@@ -20,10 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // usar conex.php (wrapper) para obtener $pdo o la función conex()
-    $conexFile = __DIR__ . '/conex.php';
-    if (!file_exists($conexFile)) {
-        $msg = 'Falta conexión a la base de datos (conex.php)';
+    // usar api/config.php para obtener la conexión
+    $configFile = __DIR__ . '/api/config.php';
+    if (!file_exists($configFile)) {
+        $msg = 'Falta fichero de configuración (api/config.php)';
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
             header('Content-Type: application/json; charset=utf-8');
             http_response_code(500);
@@ -34,16 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    require_once $conexFile;
+    require_once $configFile;
 
     try {
-        // preferimos la variable $pdo si fue inicializada por conex.php
-        if (!empty($pdo) && $pdo instanceof PDO) {
-            $db = $pdo;
-        } else {
-            // conex() puede lanzar excepción si falla
-            $db = conex();
-        }
+        $db = getDBConnection();
 
         $sql = "SELECT id, nombre, abreviatura, distrito FROM secundarias WHERE clave = :clave AND pass = :pass LIMIT 1";
         $stmt = $db->prepare($sql);
