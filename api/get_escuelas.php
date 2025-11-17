@@ -13,7 +13,9 @@ try {
     $query = "SELECT e.id, e.nombre, e.direccion, e.telefono, l.localidad 
               FROM secundarias e 
               INNER JOIN localidad l ON e.id_localidad = l.id 
-              ORDER BY e.nombre";
+              WHERE e.distrito = 123
+              ORDER BY e.nombre
+              ";
     
     $stmt = $pdo->prepare($query);
     $stmt->execute();

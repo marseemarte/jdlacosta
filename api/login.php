@@ -49,7 +49,11 @@ try {
             $_SESSION['es_jefatura'] = false;
         }
         
-        echo json_encode(['success' => true]);
+        // Retornar información sobre si es JEFATURA para redirección
+        echo json_encode([
+            'success' => true,
+            'es_jefatura' => isset($esc['abreviatura']) && $esc['abreviatura'] === 'JEFATURA'
+        ]);
         exit;
     }
 

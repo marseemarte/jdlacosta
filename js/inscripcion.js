@@ -197,7 +197,7 @@ function extractDNIData(text, tipo = 'frente') {
         }
         
         // Buscar nombres comunes en el texto
-        const nombresComunes = ['JUAN', 'MARIA', 'JOSE', 'CARLOS', 'ANA', 'LUIS', 'PEDRO', 'FRANCISCO'];
+        const nombresComunes = ['JUAN', 'MARIA', 'JOSE', 'CARLOS', 'ANA', 'LUIS', 'PEDRO', 'JOAQUIN'];
         for (const nombreComun of nombresComunes) {
             if (normalizedText.includes(nombreComun) && !data.nombre) {
                 const index = normalizedText.indexOf(nombreComun);

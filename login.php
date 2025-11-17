@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db = conex();
         }
 
-        $sql = "SELECT id, nombre FROM secundarias WHERE clave = :clave AND pass = :pass LIMIT 1";
+        $sql = "SELECT id, nombre, abreviatura, distrito FROM secundarias WHERE clave = :clave AND pass = :pass LIMIT 1";
         $stmt = $db->prepare($sql);
         $stmt->execute([':clave' => $clave, ':pass' => $pass]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -53,14 +53,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($row) {
             $_SESSION['escuela_id'] = $row['id'];
             $_SESSION['escuela_nombre'] = $row['nombre'];
+            
+            // Detectar si es usuario JEFATURA
+            $es_jefatura = isset($row['abreviatura']) && $row['abreviatura'] === 'JEFATURA';
+            if ($es_jefatura) {
+                $_SESSION['es_jefatura'] = true;
+                $_SESSION['distrito'] = (int)$row['distrito'];
+            } else {
+                $_SESSION['es_jefatura'] = false;
+            }
 
             if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                 header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['success' => true]);
+                echo json_encode([
+                    'success' => true,
+                    'es_jefatura' => $es_jefatura
+                ]);
                 exit;
             }
 
-            header('Location: dashboard.php');
+            // Redirigir según tipo de usuario
+            if ($es_jefatura) {
+                header('Location: dashboard_jefatura.php');
+            } else {
+                header('Location: dashboard.php');
+            }
             exit;
         }
 
@@ -193,7 +210,12 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         }
 
         if (res.ok && json.success) {
-            window.location.href = 'dashboard.php';
+            // Redirigir según tipo de usuario
+            if (json.es_jefatura) {
+                window.location.href = 'dashboard_jefatura.php';
+            } else {
+                window.location.href = 'dashboard.php';
+            }
         } else {
             err.textContent = json.message || 'Credenciales incorrectas.';
             err.style.display = 'block';

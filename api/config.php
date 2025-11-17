@@ -3,7 +3,7 @@
 define('DB_HOST', 'localhost');
 // Nota: asegúrate que el nombre coincide con la BD importada desde jdlacosta.sql
 // Si tu BD local se llama 'u227597108_jdlacosta' (como en el dump), usa ese nombre.
-define('DB_NAME', 'u227597108_jdlacosta');
+define('DB_NAME', 'jdlacosta');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
