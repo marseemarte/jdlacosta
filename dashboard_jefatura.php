@@ -52,9 +52,6 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
         <a href="inscriptos_nuevos.php" class="btn btn-outline-primary btn-sm">
           <i class="fa-solid fa-list"></i> Ver todos los inscriptos
         </a>
-        <a href="vinculos.html" class="btn btn-outline-warning btn-sm">
-          <i class="fas fa-link"></i> Vínculos
-        </a>
         <a href="sorteo.html" class="btn btn-outline-info btn-sm">
           <i class="fas fa-dice"></i> Sorteo
         </a>
@@ -471,4 +468,3 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-

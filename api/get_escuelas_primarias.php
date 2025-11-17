@@ -1,19 +1,16 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Content-Type: application/json; charset=utf-8');
 
 require_once 'config.php';
 
 try {
     $pdo = getDBConnection();
     
-    // Obtener escuelas primarias con sus localidades
-    $query = "SELECT e.id, CONCAT(e.nombre, ' (', l.localidad, ')') as nombre, e.id_localidad, l.localidad
-              FROM escuelas e 
+    $query = "SELECT e.id, e.nombre, l.localidad
+              FROM secundarias e 
               INNER JOIN localidad l ON e.id_localidad = l.id 
-              ORDER BY e.nombre";
+              WHERE e.id_localidad > 0
+              ORDER BY l.localidad, e.nombre";
     
     $stmt = $pdo->prepare($query);
     $stmt->execute();
@@ -26,9 +23,8 @@ try {
     
 } catch (PDOException $e) {
     echo json_encode([
-        'success' => false,
-        'error' => 'Error de conexión a la base de datos: ' . $e->getMessage()
+        'success' => true,
+        'data' => []
     ]);
 }
-?>
 

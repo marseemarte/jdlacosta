@@ -146,10 +146,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="form-group mb-3">
                 <label for="password">Contraseña</label>
                 <input type="password" id="password" name="password" class="form-control" required>
+                <small><a href="#" id="resetPasswordLink" class="text-decoration-none">¿Olvidaste tu contraseña?</a></small>
             </div>
             <div id="errorMsg" class="error-message mb-2" role="alert" style="display:none;"></div>
             <button type="submit" class="btn btn-primary w-100">Ingresar</button>
         </form>
+    </div>
+
+    <!-- Modal: Recuperar contraseña -->
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="resetPasswordLabel">Recuperar contraseña</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <p>Para recuperar tu contraseña, contacta a la Jefatura Distrital correspondiente:</p>
+            <ul style="font-size: 0.9rem;">
+              <li><strong>Jefatura La Costa:</strong> jdlacosta@example.com</li>
+              <li><strong>Jefatura Villa Gesell:</strong> jdgesell@example.com</li>
+              <li><strong>Jefatura Madariaga:</strong> jdmadariaga@example.com</li>
+              <li><strong>Jefatura Pinamar:</strong> jdpinamar@example.com</li>
+              <li><strong>Jefatura Ayacucho:</strong> jdayacucho@example.com</li>
+            </ul>
+            <p class="text-muted" style="font-size: 0.85rem;">Proporciona tu clave provincial para que te ayuden a recuperar tu acceso.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
     </div>
     </main>
 
@@ -170,6 +197,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         err.style.display = 'block';
     }
 })();
+
+// Manejar click en "¿Olvidaste tu contraseña?"
+document.getElementById('resetPasswordLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+    modal.show();
+});
 
 document.getElementById('loginForm').addEventListener('submit', async function(e){
     e.preventDefault();

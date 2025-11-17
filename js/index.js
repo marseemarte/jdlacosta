@@ -96,8 +96,8 @@ function addSchoolCardListeners() {
             const schoolId = card.getAttribute('data-school-id');
             const school = allSchools.find(s => s.id == schoolId);
             console.log('Escuela seleccionada:', school);
-            // Redirigir al formulario de inscripción con el ID de la escuela
-            window.location.href = `inscripcion.html?escuela_id=${schoolId}`;
+            // Redirigir al login de inscripción con el ID de la escuela
+            window.location.href = `login_inscripcion.html?escuela_id=${schoolId}`;
         });
     });
 }
