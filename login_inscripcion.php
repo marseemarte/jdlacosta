@@ -168,20 +168,17 @@
                 </div>
               </div>
             </div>            <form id="loginForm" class="needs-validation" novalidate>
-                <!-- Selector de escuela -->
-                <div class="school-selector">
-                    <label for="escuela" class="form-label">
-                        <i class="fas fa-school me-2"></i>Selecciona tu Escuela
-                    </label>
-                    <select id="escuela" class="form-select" required>
-                        <option value="">-- Cargando escuelas --</option>
-                    </select>
-                </div>
+                <input type="hidden" id="escuela" name="escuela">
 
                 <!-- Información de la escuela seleccionada -->
-                <div id="schoolInfo" class="school-info">
-                    <h4 id="schoolName"></h4>
-                    <p id="schoolLocation"></p>
+                <div class="school-selector">
+                    <label class="form-label">
+                        <i class="fas fa-school me-2"></i>Escuela seleccionada
+                    </label>
+                    <div id="schoolInfo" class="school-info">
+                        <h4 id="schoolName"></h4>
+                        <p id="schoolLocation"></p>
+                    </div>
                 </div>
 
                 <!-- DNI del estudiante -->
@@ -203,67 +200,59 @@
         </div>
     </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // Localidades: cargadas desde la base de datos junto con cada escuela
 
 let escuelas = [];
 
-// Cargar escuelas desde la API
-async function cargarEscuelas() {
-    const select = document.getElementById('escuela');
-    
-    try {
-        const res = await fetch('api/get_escuelas_primarias.php');
-        const json = await res.json();
-        
-        if (json.success && json.data && json.data.length > 0) {
-            escuelas = json.data;
-            select.innerHTML = '<option value="">-- Selecciona una escuela --</option>';
-            
-            escuelas.forEach(escuela => {
-                const option = document.createElement('option');
-                option.value = escuela.id;
-                option.textContent = `${escuela.nombre} (${escuela.localidad})`;
-                select.appendChild(option);
-            });
-        } else {
-            select.innerHTML = '<option value="">Error al cargar escuelas</option>';
-        }
-    } catch (e) {
-        console.error('Error cargando escuelas:', e);
-        select.innerHTML = '<option value="">Error al cargar escuelas</option>';
-    }
-}
-
-// Cambiar cuando selecciona escuela
-document.getElementById('escuela').addEventListener('change', function() {
-    const escuelaId = this.value;
+// Cargar la escuela seleccionada desde la URL
+async function cargarEscuelaSeleccionada(escuelaId) {
+    const errorMsg = document.getElementById('errorMsg');
     const schoolInfo = document.getElementById('schoolInfo');
     const dniSection = document.getElementById('dniSection');
     const submitBtn = document.getElementById('submitBtn');
-    const errorMsg = document.getElementById('errorMsg');
-    
-    errorMsg.classList.remove('show');
-    
+    const inputEscuela = document.getElementById('escuela');
+
     if (!escuelaId) {
-        schoolInfo.classList.remove('show');
-        dniSection.style.display = 'none';
+        errorMsg.textContent = 'Falta el parámetro de escuela. Regrese al listado e intente nuevamente.';
+        errorMsg.classList.add('show');
         submitBtn.disabled = true;
         return;
     }
-    
-    const escuela = escuelas.find(e => e.id == escuelaId);
-    if (escuela) {
+
+    try {
+        const res = await fetch('api/get_escuelas_primarias.php');
+        const json = await res.json();
+
+        if (!json.success || !json.data || json.data.length === 0) {
+            throw new Error('No se pudieron cargar las escuelas');
+        }
+
+        escuelas = json.data;
+        const escuela = escuelas.find(e => e.id == escuelaId);
+
+        if (!escuela) {
+            errorMsg.textContent = 'La escuela seleccionada no está disponible. Regrese al listado.';
+            errorMsg.classList.add('show');
+            submitBtn.disabled = true;
+            return;
+        }
+
+        inputEscuela.value = escuela.id;
         document.getElementById('schoolName').textContent = escuela.nombre;
         document.getElementById('schoolLocation').textContent = escuela.localidad;
         schoolInfo.classList.add('show');
         dniSection.style.display = 'block';
         submitBtn.disabled = false;
-        
-        document.getElementById('dni').value = '';
         document.getElementById('dni').focus();
+    } catch (e) {
+        console.error('Error cargando escuela seleccionada:', e);
+        errorMsg.textContent = 'Error al cargar la escuela seleccionada. Intente más tarde.';
+        errorMsg.classList.add('show');
+        submitBtn.disabled = true;
     }
-});
+}
 
 // Enviar formulario
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -360,19 +349,10 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     }
 });
 
-// Cargar escuelas al iniciar
-cargarEscuelas();
-
-// Si viene escuela_id por URL, preseleccionarla
+// Cargar escuela al iniciar
 const urlParams = new URLSearchParams(window.location.search);
 const escuelaIdFromUrl = urlParams.get('escuela_id');
-if (escuelaIdFromUrl) {
-    setTimeout(() => {
-        const select = document.getElementById('escuela');
-        select.value = escuelaIdFromUrl;
-        select.dispatchEvent(new Event('change'));
-    }, 100);
-}
+cargarEscuelaSeleccionada(escuelaIdFromUrl);
 </script>
 </body>
 </html>

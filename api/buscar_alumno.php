@@ -1,6 +1,17 @@
 <?php
 session_start();
+
+// Cabeceras para permitir solicitudes desde orígenes externos (p. ej. dominios distintos o HTTPS)
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
 header('Content-Type: application/json; charset=utf-8');
+
+// Responder preflight CORS y finalizar
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -54,7 +65,8 @@ try {
         'success' => true,
         'found' => true,
         'already_inscribed' => $already_inscribed,
-        'alumno' => $alumno
+        'alumno' => $alumno,
+        'message' => 'El DNI ingresado ya se encuentra registrado en el sistema.'
     ];
     
     if ($already_inscribed) {
