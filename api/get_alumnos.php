@@ -57,13 +57,13 @@ try {
                 COALESCE(s.orden, 999999) AS orden_sorteo,
                 a.espera
             FROM alumnos a
-            LEFT JOIN padrealumno pa ON CAST(a.dni AS UNSIGNED) = pa.dni_alumno
-            LEFT JOIN padres p ON pa.dni_padre = p.dni
+            LEFT JOIN padrealumno pa ON a.id = pa.dni_alumno
+            LEFT JOIN padres p ON pa.dni_padre = p.id
             LEFT JOIN vinculoesc v ON a.vinculo = v.id
             LEFT JOIN sorteo s ON CAST(a.dni AS UNSIGNED) = s.dni AND s.id_secundaria = a.id_secundaria
             WHERE a.id_secundaria = :esc_id 
             AND a.entro = :ingreso 
-            GROUP BY a.id, a.dni, a.apellido, a.nombre, v.vinculo, s.orden, a.espera
+            GROUP BY a.id, a.dni, a.apellido, a.nombre, a.vinculo, v.vinculo, s.orden, a.espera
             ORDER BY " . $orderByClause;
     
     $stmt = $pdo->prepare($sql);

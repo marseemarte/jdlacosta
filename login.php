@@ -83,24 +83,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['es_jefatura'] = false;
             }
 
-            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                header('Content-Type: application/json; charset=utf-8');
-                    write_app_log('login_success', ['id' => $row['id'], 'clave' => $clave]);
+                // Registro de log
+                write_app_log('login_success', ['id' => $row['id'], 'clave' => $clave]);
+
+                // Verificar si es petición AJAX
+                if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                    header('Content-Type: application/json; charset=utf-8');
                     echo json_encode([
                         'success' => true,
                         'es_jefatura' => $es_jefatura
                     ]);
-                exit;
+                    exit;
                 }
-            }
 
-            // Redirigir según tipo de usuario
-            if ($es_jefatura) {
-                header('Location: dashboard_jefatura.php');
-            } else {
-                header('Location: dashboard.php');
+                // Redirigir según tipo de usuario (solo para peticiones no-AJAX)
+                if ($es_jefatura) {
+                    header('Location: dashboard_jefatura.php');
+                } else {
+                    header('Location: dashboard.php');
+                }
+                exit;
             }
-            exit;
         }
 
         // credenciales inválidas
@@ -178,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div id="errorMsg" class="error-message mb-2" role="alert" style="display:none;"></div>
             <button type="submit" class="btn btn-primary w-100">Ingresar</button>
-        </form>
+        </form> 
     </div>
 
     <!-- Modal: Recuperar contraseña -->
@@ -238,6 +241,7 @@ async function loadCsrfToken(){
 }
 // try to load token early
 loadCsrfToken();
+</script>
 
 <script>
 // Mostrar error pasado por servidor (login.php?error=...)

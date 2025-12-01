@@ -226,6 +226,7 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
         <table id="ingresanTable" class="display table table-striped" style="width:100%">
           <thead>
             <tr>
+              <th style="display:none;">FID</th>
               <th>DNI</th>
               <th>Apellido</th>
               <th>Nombre</th>
@@ -235,6 +236,7 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
               <th>Acciones</th>
             </tr>
           </thead>
+          <tbody></tbody>
         </table>
       </div>
 
@@ -253,6 +255,8 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
           <table id="listaEsperaTable" class="display table table-sm table-warning" style="width:100%">
             <thead>
               <tr>
+                <th style="display:none;">Orden Sorteo Hidden</th>
+                <th style="display:none;">FID</th>
                 <th>DNI</th>
                 <th>Apellido</th>
                 <th>Nombre</th>
@@ -262,6 +266,7 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
                 <th>Sorteo</th>
               </tr>
             </thead>
+            <tbody></tbody>
           </table>
         </div>
       </div>
@@ -277,6 +282,7 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
           <table id="noIngresarTable" class="display table table-sm" style="width:100%">
             <thead>
               <tr>
+                <th style="display:none;">FID</th>
                 <th>DNI</th>
                 <th>Apellido</th>
                 <th>Nombre</th>
@@ -285,6 +291,7 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
                 <th>Mail</th>
               </tr>
             </thead>
+            <tbody></tbody>
           </table>
         </div>
       </div>
@@ -786,6 +793,7 @@ $(document).ready(function(){
   }).fail(function() {
     $('#fichaAlumnoContent').html('<div class="alert alert-danger">No se pudo cargar la ficha.</div>');
   });
+});
   <?php endif; ?>
 });
 </script>
