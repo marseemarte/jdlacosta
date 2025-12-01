@@ -38,7 +38,7 @@ $no_ingresan_count_stmt = $pdo->prepare("SELECT COUNT(*) as c FROM alumnos WHERE
 $no_ingresan_count_stmt->execute([':id' => $escuela_id]);
 $no_ingresan_count = $no_ingresan_count_stmt->fetchColumn();
 
-$lista_espera_count_stmt = $pdo->prepare("SELECT COUNT(*) as c FROM alumnos WHERE id_secundaria = :id AND entro = 2");
+$lista_espera_count_stmt = $pdo->prepare("SELECT COUNT(*) as c FROM alumnos WHERE id_secundaria = :id AND (entro = 0 OR entro = 2)");
 $lista_espera_count_stmt->execute([':id' => $escuela_id]);
 $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
 ?>
@@ -249,6 +249,7 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
     <?php if ((int)$lista_espera_count > 0): ?>
     <section class="card p-3 mb-4">
       <h5 class="mb-3">Lista de espera (<?= $lista_espera_count ?>)</h5>
+      <small class="text-muted d-block mb-3"><i class="fas fa-info-circle me-1"></i>Alumnos que no ingresaron - Ordenados por prioridad de sorteo (últimos 3 dígitos del DNI en relación al número de sorteo)</small>
       <div id="listaEsperaList">
         <!-- cargaremos la lista vía AJAX -->
         <div class="table-responsive">
@@ -257,6 +258,7 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
               <tr>
                 <th style="display:none;">Orden Sorteo Hidden</th>
                 <th style="display:none;">FID</th>
+                <th>#</th>
                 <th>DNI</th>
                 <th>Apellido</th>
                 <th>Nombre</th>
@@ -264,31 +266,6 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
                 <th>Teléfono</th>
                 <th>Mail</th>
                 <th>Sorteo</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-    <?php endif; ?>
-
-    <?php if ((int)$no_ingresan_count > 0): ?>
-    <section class="card p-3 mb-4">
-      <h5 class="mb-3">Alumnos que no ingresan (<?= $no_ingresan_count ?>)</h5>
-      <div id="noIngresanList">
-        <!-- cargaremos la lista vía AJAX -->
-        <div class="table-responsive">
-          <table id="noIngresarTable" class="display table table-sm" style="width:100%">
-            <thead>
-              <tr>
-                <th style="display:none;">FID</th>
-                <th>DNI</th>
-                <th>Apellido</th>
-                <th>Nombre</th>
-                <th>Vínculo</th>
-                <th>Teléfono</th>
-                <th>Mail</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -314,18 +291,10 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
             <div class="h5 mb-0 fw-bold text-success"><?= $ingresan_count ?></div>
           </div>
         </div>
-        <?php if ($lista_espera_count > 0): ?>
         <div class="col-md-3">
           <div class="text-center p-3 bg-warning bg-opacity-10 rounded">
             <small class="text-muted d-block mb-1">Lista de espera</small>
             <div class="h5 mb-0 fw-bold text-warning"><?= $lista_espera_count ?></div>
-          </div>
-        </div>
-        <?php endif; ?>
-        <div class="col-md-3">
-          <div class="text-center p-3 bg-danger bg-opacity-10 rounded">
-            <small class="text-muted d-block mb-1">No ingresan</small>
-            <div class="h5 mb-0 fw-bold text-danger"><?= $no_ingresan_count ?></div>
           </div>
         </div>
       </div>
@@ -337,9 +306,9 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
         <small><i class="fas fa-exclamation-triangle"></i> <strong>Nota:</strong> La suma de estados (<?= $suma_estados ?>) no coincide con el total de anotados (<?= $total_anotados ?>). Puede haber registros con valores de 'entro' diferentes a 0, 1 o 2.</small>
       </div>
       <?php endif; ?>
-      <?php if ($total_anotados == $vacantes && ($no_ingresan_count > 0 || $lista_espera_count > 0)): ?>
+      <?php if ($total_anotados == $vacantes && $lista_espera_count > 0): ?>
       <div class="alert alert-info mt-2 mb-0">
-        <small><i class="fas fa-info-circle"></i> <strong>Nota:</strong> Aunque el número de anotados coincide con las vacantes, hay alumnos que no ingresan o están en lista de espera. Esto puede deberse a que el sorteo o la asignación ya se realizó y algunos alumnos fueron asignados a otras escuelas o rechazados por otros motivos.</small>
+        <small><i class="fas fa-info-circle"></i> <strong>Nota:</strong> Aunque el número de anotados coincide con las vacantes, hay alumnos en lista de espera. Esto puede deberse a que el sorteo o la asignación ya se realizó y algunos alumnos fueron asignados a otras escuelas.</small>
       </div>
       <?php endif; ?>
     </div>
@@ -685,6 +654,13 @@ $(document).ready(function(){
       columns: [
         { data: 'orden_sorteo', visible: false }, // Columna oculta para ordenar por sorteo
         { data: 'fid', visible: false }, // Columna oculta para ordenar por FID
+        { // Columna de posición en lista de espera
+          data: null,
+          orderable: false,
+          render: function (data, type, row, meta) {
+            return meta.row + 1; // Número de fila (posición en lista)
+          }
+        },
         { data: 'dni' },
         { data: 'apellido' },
         { data: 'nombre' },
@@ -699,43 +675,6 @@ $(document).ready(function(){
       pageLength: 10,
       lengthChange: false,
       order: [[0, 'asc'], [1, 'asc']], // ordenar por orden de sorteo y luego por FID
-      language: {
-        search: "Filtro:",
-        paginate: { previous: "Prev", next: "Next" },
-        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-        zeroRecords: "No se encontraron registros"
-      }
-    });
-  }
-
-  // si existe sección "no ingresan" la cargamos en otra datatable
-  if ($('#noIngresarTable').length) {
-    $('#noIngresarTable').DataTable({
-      ajax: {
-        url: 'api/get_alumnos.php?type=no_ingresan',
-        dataSrc: function(json){ 
-          if (!json || typeof json.data === 'undefined') { 
-            console.error('Error cargando no_ingresan:', json); 
-            return []; 
-          } 
-          return json.data; 
-        },
-        error: function(xhr){ 
-          console.error('AJAX no_ingresan falló', xhr?.status, xhr?.responseText); 
-        }
-      },
-      columns: [
-        { data: 'fid', visible: false }, // Columna oculta para ordenar por FID
-        { data: 'dni' },
-        { data: 'apellido' },
-        { data: 'nombre' },
-        { data: 'vinculo' },
-        { data: 'telefono' },
-        { data: 'mail' }
-      ],
-      order: [[0, 'asc']], // Ordenar por FID (columna 0, oculta)
-      pageLength: 10,
-      lengthChange: false,
       language: {
         search: "Filtro:",
         paginate: { previous: "Prev", next: "Next" },

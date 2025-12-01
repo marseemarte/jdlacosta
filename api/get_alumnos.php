@@ -23,11 +23,12 @@ $type = isset($_GET['type']) ? $_GET['type'] : 'ingresan'; // 'ingresan'|'no_ing
 try {
     // Determinar el valor de entro según el tipo solicitado
     if ($type === 'no_ingresan') {
-        $ingresoVal = 0;
+        $whereClause = "a.entro = 0";
     } elseif ($type === 'lista_espera') {
-        $ingresoVal = 2;
+        // Lista de espera incluye tanto entro=0 como entro=2 (todos los que no ingresaron)
+        $whereClause = "(a.entro = 0 OR a.entro = 2)";
     } else {
-        $ingresoVal = 1; // por defecto 'ingresan'
+        $whereClause = "a.entro = 1"; // por defecto 'ingresan'
     }
     
     // Query con JOINs para obtener telefono y mail de padres, y nombre del vínculo
@@ -62,12 +63,12 @@ try {
             LEFT JOIN vinculoesc v ON a.vinculo = v.id
             LEFT JOIN sorteo s ON CAST(a.dni AS UNSIGNED) = s.dni AND s.id_secundaria = a.id_secundaria
             WHERE a.id_secundaria = :esc_id 
-            AND a.entro = :ingreso 
+            AND " . $whereClause . "
             GROUP BY a.id, a.dni, a.apellido, a.nombre, a.vinculo, v.vinculo, s.orden, a.espera
             ORDER BY " . $orderByClause;
     
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([':esc_id' => $escuela_id, ':ingreso' => $ingresoVal]);
+    $stmt->execute([':esc_id' => $escuela_id]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode(['data' => $rows]);
