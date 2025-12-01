@@ -6,3 +6,6 @@
 {"ts":"2025-12-01T05:05:06+01:00","event":"login_success","ip":"::1","data":{"id":3,"clave":"0123MT0001"}}
 {"ts":"2025-12-01T05:07:20+01:00","event":"password_reset","ip":"::1","data":{"id":2,"clave":"0123MS0007"}}
 {"ts":"2025-12-01T05:07:22+01:00","event":"login_success","ip":"::1","data":{"id":2,"clave":"0123MS0007"}}
+{"ts":"2025-12-01T13:59:56+01:00","event":"save_inscripcion_init","ip":"::1","data":{"method":"POST"}}
+{"ts":"2025-12-01T13:59:56+01:00","event":"save_inscripcion_post","ip":"::1","data":{"has_csrf":true,"escuela_id":"10","dni_est":"52716332","dni_tutor":"43223332","files_count":5}}
+{"ts":"2025-12-01T13:59:56+01:00","event":"inscripcion_saved","ip":"::1","data":{"escuela":10,"alumno_dni":"52716332"}}

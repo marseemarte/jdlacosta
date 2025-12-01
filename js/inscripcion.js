@@ -1,5 +1,14 @@
 // Obtener datos del alumno desde sesión
 let CSRF_TOKEN = '';
+let escuelasSecundarias = []; // Guardar todas las escuelas para filtrado dinámico
+let escuelaSeleccionada = 0; // ID de la escuela seleccionada en el index (a excluir de opciones 2 y 3)
+
+// Obtener el ID de la escuela desde los parámetros de URL
+function getEscuelaDelURL() {
+    const params = new URLSearchParams(window.location.search);
+    return parseInt(params.get('escuela_id')) || 0;
+}
+
 async function loadCsrfToken(){
     try{
         const r = await fetch('api/get_csrf.php', { credentials: 'same-origin' });
@@ -19,12 +28,15 @@ async function obtenerDatosAlumno() {
         
         if (data.success && data.alumno) {
             alumnoData = data.alumno;
+            escuelaSeleccionada = getEscuelaDelURL(); // Obtener escuela del URL (la que se seleccionó en index)
             
             // Auto-completar campos del estudiante
             document.getElementById('dni_estudiante').value = alumnoData.dni || '';
             document.getElementById('apellido_estudiante').value = alumnoData.apellido || '';
             document.getElementById('nombre_estudiante').value = alumnoData.nombre || '';
-            document.getElementById('escuela_id').value = alumnoData.id_secundaria || '';
+            document.getElementById('escuela_id').value = escuelaSeleccionada || '';
+            
+            console.log('Escuela seleccionada (del index):', escuelaSeleccionada);
             
             // Ahora cargar los datos del formulario (dropdowns, etc)
             await loadFormData();
@@ -43,7 +55,7 @@ async function obtenerDatosAlumno() {
 }
 
 // Esperar a que el DOM esté listo antes de cargar datos
-document.addEventListener('DOMContentLoaded', obtenerDatosAlumno);
+// NO usar DOMContentLoaded aquí, se declara al final del archivo
 
 // Cargar datos para los dropdowns
 async function loadFormData() {
@@ -78,20 +90,8 @@ async function loadFormData() {
         const escuelasSecRes = await fetch('api/get_escuelas.php');
         const escuelasSecData = await escuelasSecRes.json();
         if (escuelasSecData.success) {
-            const selectSegunda = document.getElementById('segunda_opcion');
-            const selectTercera = document.getElementById('tercera_opcion');
-            
-            escuelasSecData.data.forEach(esc => {
-                // Opción 2
-                const option2 = document.createElement('option');
-                option2.value = esc.id;
-                option2.textContent = `${esc.nombre} (${esc.localidad.substring(0, 10)})`;
-                selectSegunda.appendChild(option2.cloneNode(true));
-                
-                // Opción 3
-                const option3 = option2.cloneNode(true);
-                selectTercera.appendChild(option3);
-            });
+            escuelasSecundarias = escuelasSecData.data; // Guardar todas las escuelas
+            // NO poblar los selects aquí - se llenarán cuando se seleccione procedencia
         }
 
         // Cargar vínculos
@@ -113,15 +113,18 @@ async function loadFormData() {
     }
 }
 
-// Manejar el envío del formulario
-document.getElementById('inscripcionForm').addEventListener('submit', async function(e) {
+// Manejar el envío del formulario - se asignará en DOMContentLoaded
+async function handleFormSubmit(e) {
     e.preventDefault();
+    console.log('=== INICIO SUBMIT ===');
     
     // Validar DNI del estudiante
     const dniEstudiante = document.getElementById('dni_estudiante').value.trim();
+    console.log('DNI Estudiante:', dniEstudiante);
     if (!validarDNI(dniEstudiante)) {
         document.getElementById('error-dni').textContent = 'DNI debe tener 7-8 dígitos';
         document.getElementById('error-dni').style.display = 'block';
+        console.log('DNI Estudiante inválido');
         return;
     } else {
         document.getElementById('error-dni').style.display = 'none';
@@ -129,22 +132,32 @@ document.getElementById('inscripcionForm').addEventListener('submit', async func
     
     // Validar DNI del tutor
     const dniTutor = document.getElementById('dni_tutor').value.trim();
+    console.log('DNI Tutor:', dniTutor);
     if (!validarDNI(dniTutor)) {
         document.getElementById('error-dni-tutor').textContent = 'DNI debe tener 7-8 dígitos';
         document.getElementById('error-dni-tutor').style.display = 'block';
+        console.log('DNI Tutor inválido');
         return;
     } else {
         document.getElementById('error-dni-tutor').style.display = 'none';
     }
     
-    const formData = new FormData(this);
-    if (CSRF_TOKEN) formData.append('csrf_token', CSRF_TOKEN);
-    const submitBtn = this.querySelector('button[type="submit"]');
+    const formData = new FormData(document.getElementById('inscripcionForm'));
+    if (CSRF_TOKEN) {
+        formData.append('csrf_token', CSRF_TOKEN);
+        console.log('CSRF Token agregado:', CSRF_TOKEN.substring(0, 10) + '...');
+    } else {
+        console.warn('No hay CSRF_TOKEN disponible');
+    }
+    
+    const submitBtn = document.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     
     // Deshabilitar botón y mostrar carga
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    
+    console.log('Enviando formulario a api/save_inscripcion.php...');
     
     try {
         const response = await fetch('api/save_inscripcion.php', {
@@ -152,31 +165,33 @@ document.getElementById('inscripcionForm').addEventListener('submit', async func
             body: formData
         });
         
+        console.log('Response status:', response.status);
+        
         const result = await response.json();
+        console.log('Response JSON:', result);
         
         if (result.success) {
             alert('Inscripción guardada exitosamente.');
             window.location.href = 'index.html';
         } else {
-            alert('Error al guardar la inscripción: ' + (result.message || 'Error desconocido'));
+            const errorMsg = result.message || 'Error desconocido';
+            console.error('Error:', errorMsg);
+            alert('Error al guardar la inscripción: ' + errorMsg);
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Error de conexión al guardar la inscripción.');
+        console.error('Error de conexión:', error);
+        alert('Error de conexión al guardar la inscripción: ' + error.message);
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
     }
-});
-
-// ========== FUNCIONALIDAD DE OCR Y ESCANEO DE DNI ==========
+}
 
 // Función para mostrar preview de imagen
-function showImagePreview(inputId, previewId, buttonId) {
+function showImagePreview(inputId, previewId) {
     const input = document.getElementById(inputId);
     const preview = document.getElementById(previewId);
-    const button = document.getElementById(buttonId);
     
     input.addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -184,288 +199,13 @@ function showImagePreview(inputId, previewId, buttonId) {
             const reader = new FileReader();
             reader.onload = function(e) {
                 preview.innerHTML = `<img src="${e.target.result}" class="preview-image" alt="Preview">`;
-                if (button) {
-                    button.style.display = 'inline-block';
-                }
             };
             reader.readAsDataURL(file);
         } else {
             preview.innerHTML = '';
-            if (button) {
-                button.style.display = 'none';
-            }
         }
     });
 }
-
-// Función para extraer datos del texto escaneado del DNI
-function extractDNIData(text, tipo = 'frente') {
-    const data = {
-        dni: '',
-        nombre: '',
-        apellido: '',
-        fechaNacimiento: '',
-        domicilio: ''
-    };
-    
-    // Normalizar texto: eliminar espacios extra y convertir a mayúsculas
-    const normalizedText = text.toUpperCase().replace(/\s+/g, ' ').trim();
-    const lines = normalizedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    
-    if (tipo === 'frente') {
-        // Buscar DNI: números de 7-8 dígitos
-        const dniMatch = normalizedText.match(/\b(\d{7,8})\b/);
-        if (dniMatch) {
-            data.dni = dniMatch[1];
-        }
-        
-        // Buscar fecha de nacimiento: formato DD/MM/YYYY o DD-MM-YYYY
-        const fechaMatch = normalizedText.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-        if (fechaMatch) {
-            const day = fechaMatch[1].padStart(2, '0');
-            const month = fechaMatch[2].padStart(2, '0');
-            const year = fechaMatch[3];
-            data.fechaNacimiento = `${year}-${month}-${day}`;
-        }
-        
-        // Buscar nombre y apellido
-        // En DNI argentino, generalmente el formato es: APELLIDO, NOMBRE
-        // O puede estar en líneas separadas
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            
-            // Buscar patrón "APELLIDO, NOMBRE" o "APELLIDO NOMBRE"
-            const nombreCompletoMatch = line.match(/([A-ZÁÉÍÓÚÑ\s]+)[,\s]+([A-ZÁÉÍÓÚÑ\s]+)/);
-            if (nombreCompletoMatch && !data.apellido) {
-                data.apellido = nombreCompletoMatch[1].trim();
-                data.nombre = nombreCompletoMatch[2].trim();
-            }
-            
-            // Si encontramos palabras que parecen nombres (sin números, sin caracteres especiales)
-            if (!data.apellido && /^[A-ZÁÉÍÓÚÑ\s]+$/.test(line) && line.length > 3 && !line.includes('DNI') && !line.includes('ARGENTINA')) {
-                // Intentar separar apellido y nombre
-                const palabras = line.split(/\s+/);
-                if (palabras.length >= 2) {
-                    data.apellido = palabras[0];
-                    data.nombre = palabras.slice(1).join(' ');
-                }
-            }
-        }
-        
-        // Buscar nombres comunes en el texto
-        const nombresComunes = ['JUAN', 'MARIA', 'JOSE', 'CARLOS', 'ANA', 'LUIS', 'PEDRO', 'JOAQUIN'];
-        for (const nombreComun of nombresComunes) {
-            if (normalizedText.includes(nombreComun) && !data.nombre) {
-                const index = normalizedText.indexOf(nombreComun);
-                const contexto = normalizedText.substring(Math.max(0, index - 30), index + 30);
-                const regex = new RegExp(`([A-ZÁÉÍÓÚÑ\\s]+)\\s*${nombreComun}\\s+([A-ZÁÉÍÓÚÑ\\s]+)`);
-                const match = contexto.match(regex);
-                if (match) {
-                    data.apellido = match[1].trim();
-                    data.nombre = nombreComun + ' ' + match[2].trim();
-                }
-            }
-        }
-    } else if (tipo === 'reverso') {
-        // En el reverso buscamos principalmente el domicilio
-        // Buscar direcciones: generalmente tienen números y palabras
-        for (const line of lines) {
-            // Buscar líneas que parecen direcciones (tienen números y letras)
-            if (/\d+/.test(line) && /[A-ZÁÉÍÓÚÑ]/.test(line) && line.length > 10) {
-                // Filtrar líneas que no son fechas ni DNI
-                if (!/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}/.test(line) && !/\b\d{7,8}\b/.test(line)) {
-                    data.domicilio = line;
-                    break;
-                }
-            }
-        }
-    }
-    
-    return data;
-}
-
-// Función para escanear DNI con OCR
-async function scanDNI(inputId, tipo, campos) {
-    const input = document.getElementById(inputId);
-    const file = input.files[0];
-    
-    if (!file) {
-        alert('Por favor, seleccione una imagen primero.');
-        return;
-    }
-    
-    const statusDiv = document.getElementById(campos.statusId);
-    const button = document.getElementById(campos.buttonId);
-    
-    // Mostrar estado de carga
-    if (statusDiv) {
-        statusDiv.innerHTML = '<span class="ocr-loading"><i class="fas fa-spinner fa-spin"></i> Escaneando DNI...</span>';
-    }
-    if (button) {
-        button.disabled = true;
-    }
-    
-    try {
-        // Usar Tesseract.js para OCR
-        const { data: { text } } = await Tesseract.recognize(file, 'spa', {
-            logger: m => {
-                if (m.status === 'recognizing text') {
-                    if (statusDiv) {
-                        statusDiv.innerHTML = `<span class="ocr-loading"><i class="fas fa-spinner fa-spin"></i> Escaneando... ${Math.round(m.progress * 100)}%</span>`;
-                    }
-                }
-            }
-        });
-        
-        // Extraer datos del texto
-        const extractedData = extractDNIData(text, tipo);
-        
-        // Autocompletar campos del formulario
-        let camposCompletados = 0;
-        
-        if (extractedData.dni && campos.dniId) {
-            const dniField = document.getElementById(campos.dniId);
-            if (dniField && !dniField.value) {
-                dniField.value = extractedData.dni;
-                camposCompletados++;
-            }
-        }
-        
-        if (extractedData.nombre && campos.nombreId) {
-            const nombreField = document.getElementById(campos.nombreId);
-            if (nombreField && !nombreField.value) {
-                nombreField.value = extractedData.nombre;
-                camposCompletados++;
-            }
-        }
-        
-        if (extractedData.apellido && campos.apellidoId) {
-            const apellidoField = document.getElementById(campos.apellidoId);
-            if (apellidoField && !apellidoField.value) {
-                apellidoField.value = extractedData.apellido;
-                camposCompletados++;
-            }
-        }
-        
-        if (extractedData.fechaNacimiento && campos.fechaId) {
-            const fechaField = document.getElementById(campos.fechaId);
-            if (fechaField && !fechaField.value) {
-                fechaField.value = extractedData.fechaNacimiento;
-                camposCompletados++;
-            }
-        }
-        
-        if (extractedData.domicilio && campos.domicilioId) {
-            const domicilioField = document.getElementById(campos.domicilioId);
-            if (domicilioField && !domicilioField.value) {
-                domicilioField.value = extractedData.domicilio;
-                camposCompletados++;
-            }
-        }
-        
-        // Mostrar resultado
-        if (statusDiv) {
-            if (camposCompletados > 0) {
-                statusDiv.innerHTML = `<span class="ocr-success"><i class="fas fa-check-circle"></i> ${camposCompletados} campo(s) completado(s) automáticamente</span>`;
-            } else {
-                statusDiv.innerHTML = `<span class="ocr-error"><i class="fas fa-exclamation-triangle"></i> No se pudieron extraer datos. Por favor, complete manualmente.</span>`;
-            }
-        }
-        
-        // Mostrar texto extraído en consola para debugging
-        console.log('Texto extraído del DNI:', text);
-        console.log('Datos extraídos:', extractedData);
-        
-    } catch (error) {
-        console.error('Error al escanear DNI:', error);
-        if (statusDiv) {
-            statusDiv.innerHTML = `<span class="ocr-error"><i class="fas fa-times-circle"></i> Error al escanear. Por favor, intente nuevamente.</span>`;
-        }
-        alert('Error al escanear el DNI. Por favor, intente nuevamente o complete los datos manualmente.');
-    } finally {
-        if (button) {
-            button.disabled = false;
-        }
-    }
-}
-
-// Cargar datos cuando se carga la página
-document.addEventListener('DOMContentLoaded', async function() {
-    await loadCsrfToken();
-    // 1. Primero obtener datos del alumno desde sesión
-    await obtenerDatosAlumno();
-    
-    // 2. Configurar previews y botones de escaneo
-    // Preview de imágenes del estudiante
-    showImagePreview('dni_frente_estudiante', 'preview_frente_estudiante', 'btn_scan_frente_estudiante');
-    showImagePreview('dni_reverso_estudiante', 'preview_reverso_estudiante', 'btn_scan_reverso_estudiante');
-    
-    // Preview de imágenes del tutor
-    showImagePreview('dni_frente_tutor', 'preview_frente_tutor', 'btn_scan_frente_tutor');
-    showImagePreview('dni_reverso_tutor', 'preview_reverso_tutor', 'btn_scan_reverso_tutor');
-    
-    // Botones de escaneo del estudiante
-    const btnScanFrenteEstudiante = document.getElementById('btn_scan_frente_estudiante');
-    if (btnScanFrenteEstudiante) {
-        btnScanFrenteEstudiante.addEventListener('click', function() {
-            scanDNI('dni_frente_estudiante', 'frente', {
-                statusId: 'status_ocr_estudiante',
-                buttonId: 'btn_scan_frente_estudiante',
-                dniId: 'dni_estudiante',
-                nombreId: 'nombre_estudiante',
-                apellidoId: 'apellido_estudiante',
-                fechaId: 'fecha_nacimiento_estudiante',
-                domicilioId: null
-            });
-        });
-    }
-    
-    const btnScanReversoEstudiante = document.getElementById('btn_scan_reverso_estudiante');
-    if (btnScanReversoEstudiante) {
-        btnScanReversoEstudiante.addEventListener('click', function() {
-            scanDNI('dni_reverso_estudiante', 'reverso', {
-                statusId: 'status_ocr_estudiante',
-                buttonId: 'btn_scan_reverso_estudiante',
-                dniId: null,
-                nombreId: null,
-                apellidoId: null,
-                fechaId: null,
-                domicilioId: 'domicilio_estudiante'
-            });
-        });
-    }
-    
-    // Botones de escaneo del tutor
-    const btnScanFrenteTutor = document.getElementById('btn_scan_frente_tutor');
-    if (btnScanFrenteTutor) {
-        btnScanFrenteTutor.addEventListener('click', function() {
-            scanDNI('dni_frente_tutor', 'frente', {
-                statusId: 'status_ocr_tutor',
-                buttonId: 'btn_scan_frente_tutor',
-                dniId: 'dni_tutor',
-                nombreId: 'nombre_tutor',
-                apellidoId: 'apellido_tutor',
-                fechaId: 'fecha_nacimiento_tutor',
-                domicilioId: null
-            });
-        });
-    }
-    
-    const btnScanReversoTutor = document.getElementById('btn_scan_reverso_tutor');
-    if (btnScanReversoTutor) {
-        btnScanReversoTutor.addEventListener('click', function() {
-            scanDNI('dni_reverso_tutor', 'reverso', {
-                statusId: 'status_ocr_tutor',
-                buttonId: 'btn_scan_reverso_tutor',
-                dniId: null,
-                nombreId: null,
-                apellidoId: null,
-                fechaId: null,
-                domicilioId: null
-            });
-        });
-    }
-});
 
 // Función para manejar el cambio de vínculo y mostrar campos dinámicos
 function handleVinculoChange() {
@@ -520,14 +260,113 @@ function handleVinculoChange() {
     }
 }
 
-// Cargar datos cuando se carga la página
-document.addEventListener('DOMContentLoaded', function() {
-    loadFormData();
+// Función para actualizar dinámicamente las opciones de escuelas 2 y 3
+function updateEscuelasOpciones() {
+    const selectSegunda = document.getElementById('segunda_opcion');
+    const selectTercera = document.getElementById('tercera_opcion');
     
-    // Agregar event listener para el cambio de vínculo
+    console.log('=== UPDATE ESCUELAS ===');
+    console.log('Escuela seleccionada (index):', escuelaSeleccionada);
+    
+    // Limpiar opciones de 2da (excepto la vacía)
+    while (selectSegunda.options.length > 1) {
+        selectSegunda.remove(1);
+    }
+    selectSegunda.value = ''; // Resetear valor
+    
+    // Poblar 2da opción: todas las escuelas EXCEPTO la seleccionada en index
+    escuelasSecundarias.forEach(esc => {
+        const escuelaId = parseInt(esc.id);
+        if (escuelaId !== escuelaSeleccionada) {
+            const option = document.createElement('option');
+            option.value = escuelaId;
+            option.textContent = `${esc.nombre} (${esc.localidad.substring(0, 10)})`;
+            selectSegunda.appendChild(option);
+        }
+    });
+    
+    console.log('2da opción poblada con', selectSegunda.options.length - 1, 'escuelas');
+    
+    // Limpiar 3ra opción
+    while (selectTercera.options.length > 1) {
+        selectTercera.remove(1);
+    }
+    selectTercera.value = '';
+}
+
+// Función para actualizar SOLO la 3ra opción cuando cambia la 2da
+function actualizarTerceraOpcion() {
+    const selectSegunda = document.getElementById('segunda_opcion');
+    const selectTercera = document.getElementById('tercera_opcion');
+    
+    const segundaSeleccionada = parseInt(selectSegunda.value) || 0;
+    
+    console.log('=== ACTUALIZAR TERCERA ===');
+    console.log('Escuela seleccionada (index):', escuelaSeleccionada);
+    console.log('2da opción:', segundaSeleccionada);
+    
+    // Limpiar 3ra opción (excepto la vacía)
+    while (selectTercera.options.length > 1) {
+        selectTercera.remove(1);
+    }
+    selectTercera.value = '';
+    
+    // Poblar 3ra opción: todas las escuelas EXCEPTO la seleccionada en index y la 2da opción
+    escuelasSecundarias.forEach(esc => {
+        const escuelaId = parseInt(esc.id);
+        // Excluir si es la escuela seleccionada en index O la 2da opción
+        if (escuelaId !== escuelaSeleccionada && escuelaId !== segundaSeleccionada) {
+            const option = document.createElement('option');
+            option.value = escuelaId;
+            option.textContent = `${esc.nombre} (${esc.localidad.substring(0, 10)})`;
+            selectTercera.appendChild(option);
+        }
+    });
+    
+    console.log('3ra opción poblada con', selectTercera.options.length - 1, 'escuelas');
+}
+
+// Cargar datos cuando se carga la página
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadCsrfToken();
+    // 1. Primero obtener datos del alumno desde sesión
+    await obtenerDatosAlumno();
+    
+    // 2. Configurar previews de imágenes
+    // Preview de imágenes del estudiante
+    showImagePreview('dni_frente_estudiante', 'preview_frente_estudiante');
+    showImagePreview('dni_reverso_estudiante', 'preview_reverso_estudiante');
+    
+    // Preview de imágenes del tutor
+    showImagePreview('dni_frente_tutor', 'preview_frente_tutor');
+    showImagePreview('dni_reverso_tutor', 'preview_reverso_tutor');
+    
+    // 3. Asignar evento submit del formulario
+    const inscripcionForm = document.getElementById('inscripcionForm');
+    if (inscripcionForm) {
+        inscripcionForm.addEventListener('submit', handleFormSubmit);
+    }
+    
+    // 4. Agregar event listener para el cambio de vínculo
     const vinculoSelect = document.getElementById('vinculo');
     if (vinculoSelect) {
         vinculoSelect.addEventListener('change', handleVinculoChange);
+    }
+    
+    // 5. Agregar event listeners para actualizar opciones de escuelas dinámicamente
+    const escuelaProc = document.getElementById('escuela_procedencia');
+    const selectSegunda = document.getElementById('segunda_opcion');
+    const selectTercera = document.getElementById('tercera_opcion');
+    
+    if (escuelaProc) {
+        escuelaProc.addEventListener('change', updateEscuelasOpciones);
+    }
+    if (selectSegunda) {
+        // Cuando cambia segunda opción, solo actualizar tercera
+        selectSegunda.addEventListener('change', actualizarTerceraOpcion);
+    }
+    if (selectTercera) {
+        // No necesita listener, es solo lectura en función de otras opciones
     }
 });
 

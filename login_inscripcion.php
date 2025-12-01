@@ -331,8 +331,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-arrow-right me-2"></i>Continuar';
             } else {
-                // Redirigir a inscripción
-                window.location.href = 'inscripcion.html';
+                // Redirigir a inscripción pasando el escuela_id en la URL
+                window.location.href = `inscripcion.html?escuela_id=${escuelaId}`;
             }
         } else {
             errorMsg.textContent = json.message || 'Error al procesar la solicitud';
