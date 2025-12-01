@@ -48,7 +48,13 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
         <h1 class="h4 mb-0 fw-semibold">Inscripción Secundaria 2025</h1>
         <small class="text-muted"><?= htmlspecialchars($esc_nombre) ?></small>
       </div>
-      <div class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+        <button type="button" id="generateCodesBtn" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-shield-alt me-1"></i> Generar códigos de seguridad
+        </button>
+        <button type="button" id="managePasswordsBtn" class="btn btn-warning btn-sm text-dark fw-semibold">
+          <i class="fas fa-key me-1"></i> Gestionar contraseñas
+        </button>
         <a href="inscriptos_nuevos.php" class="btn btn-outline-primary btn-sm">
           <i class="fa-solid fa-list"></i> Ver todos los inscriptos
         </a>
@@ -144,6 +150,42 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
     </div>
   </div>
 
+  <!-- Modal para gestión de contraseñas -->
+  <div class="modal fade" id="modalPassword" tabindex="-1" aria-labelledby="modalPasswordLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-warning-subtle border-0">
+          <h5 class="modal-title fw-semibold" id="modalPasswordLabel">
+            <i class="fas fa-key me-2"></i>Cambiar contraseña de escuela
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form id="passwordForm" class="vstack gap-3">
+            <div>
+              <label for="passwordSchoolSelect" class="form-label">Escuela</label>
+              <select id="passwordSchoolSelect" class="form-select" required>
+                <option value="">Cargando escuelas...</option>
+              </select>
+            </div>
+            <div>
+              <label for="newPasswordInput" class="form-label">Nueva contraseña</label>
+              <input type="text" id="newPasswordInput" class="form-control" minlength="4" placeholder="Ingrese nueva contraseña" required>
+              <small class="text-muted">Debe tener al menos 4 caracteres. Se guardará tal cual se escriba.</small>
+            </div>
+            <div id="passwordModalFeedback" class="text-danger small"></div>
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-warning text-dark fw-semibold">
+                <i class="fas fa-save me-1"></i>Guardar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
   $(document).ready(function(){
     var currentModalEscuelaId = null;
@@ -198,6 +240,8 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
 
     var alumnosModalTable = null;
     var modalElement = document.getElementById('modalAlumnos');
+    var passwordModalEl = document.getElementById('modalPassword');
+    var passwordModal = new bootstrap.Modal(passwordModalEl);
 
     $(modalElement).on('hidden.bs.modal', function () {
       if (alumnosModalTable) {
@@ -218,6 +262,115 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
     });
     $(document).on('click', '.no-ingresan-btn', function() {
       mostrarAlumnos($(this).data('escuela-id'), $(this).data('escuela-nombre'), 'no_ingresan');
+    });
+
+    $('#managePasswordsBtn').on('click', function(){
+      cargarEscuelasParaPassword();
+      $('#newPasswordInput').val('');
+      $('#passwordModalFeedback').text('');
+      passwordModal.show();
+    });
+
+    $('#generateCodesBtn').on('click', function(){
+      Swal.fire({
+        title: 'Generar códigos',
+        text: 'Esto generará nuevos códigos de seguridad para todas las escuelas del distrito. ¿Desea continuar?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, generar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        $.ajax({
+          url: 'api/generate_security_codes.php',
+          method: 'POST',
+          dataType: 'json'
+        }).done(function(resp){
+          if (resp && resp.success) {
+            Swal.fire({
+              icon: 'success',
+              title: '¡Listo!',
+              text: resp.message || 'Códigos generados correctamente',
+              timer: 2000,
+              showConfirmButton: false
+            });
+          } else {
+            Swal.fire('Error', (resp && resp.message) ? resp.message : 'No se pudieron generar los códigos.', 'error');
+          }
+        }).fail(function(xhr){
+          let msg = 'Error al generar los códigos.';
+          if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+            msg = xhr.responseJSON.message;
+          }
+          Swal.fire('Error servidor', msg, 'error');
+        });
+      });
+    });
+
+    function cargarEscuelasParaPassword() {
+      var select = $('#passwordSchoolSelect');
+      select.html('<option value="">Cargando escuelas...</option>');
+      $.ajax({
+        url: 'api/get_escuelas_distrito.php',
+        dataType: 'json'
+      }).done(function(resp){
+        if (!resp || !resp.success || !resp.data || !resp.data.length) {
+          select.html('<option value="">No hay escuelas disponibles</option>');
+          return;
+        }
+        var options = '<option value="">Seleccione una escuela</option>';
+        resp.data.forEach(function(esc){
+          options += `<option value="${esc.id}">${esc.nombre}</option>`;
+        });
+        select.html(options);
+      }).fail(function(){
+        select.html('<option value="">Error al cargar escuelas</option>');
+      });
+    }
+
+    $('#passwordForm').on('submit', function(e){
+      e.preventDefault();
+      var escuelaId = $('#passwordSchoolSelect').val();
+      var nuevaPass = $('#newPasswordInput').val().trim();
+      var feedback = $('#passwordModalFeedback');
+      feedback.text('');
+
+      if (!escuelaId) {
+        feedback.text('Seleccione una escuela.');
+        return;
+      }
+      if (nuevaPass.length < 4) {
+        feedback.text('La contraseña debe tener al menos 4 caracteres.');
+        return;
+      }
+
+      $.ajax({
+        url: 'api/update_school_password.php',
+        method: 'POST',
+        data: { escuela_id: escuelaId, pass: nuevaPass },
+        dataType: 'json'
+      }).done(function(resp){
+        if (resp && resp.success) {
+          passwordModal.hide();
+          $('#passwordForm')[0].reset();
+          Swal.fire({
+            icon: 'success',
+            title: 'Contraseña actualizada',
+            text: 'La escuela seleccionada ya tiene la nueva clave.',
+            timer: 1800,
+            showConfirmButton: false
+          });
+        } else {
+          feedback.text((resp && resp.message) ? resp.message : 'No se pudo actualizar la contraseña.');
+        }
+      }).fail(function(xhr){
+        let msg = 'Error al actualizar la contraseña.';
+        if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+          msg = xhr.responseJSON.message;
+        }
+        feedback.text(msg);
+      });
     });
 
     function mostrarAlumnos(escuelaId, escuelaNombre, tipo) {

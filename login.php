@@ -162,18 +162,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
           </div>
           <div class="modal-body">
-            <p>Para recuperar tu contraseña, contacta a la Jefatura Distrital correspondiente:</p>
-            <ul style="font-size: 0.9rem;">
-              <li><strong>Jefatura La Costa:</strong> jdlacosta@example.com</li>
-              <li><strong>Jefatura Villa Gesell:</strong> jdgesell@example.com</li>
-              <li><strong>Jefatura Madariaga:</strong> jdmadariaga@example.com</li>
-              <li><strong>Jefatura Pinamar:</strong> jdpinamar@example.com</li>
-              <li><strong>Jefatura Ayacucho:</strong> jdayacucho@example.com</li>
-            </ul>
-            <p class="text-muted" style="font-size: 0.85rem;">Proporciona tu clave provincial para que te ayuden a recuperar tu acceso.</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <form id="resetPasswordForm" class="vstack gap-3">
+              <div>
+                <label for="resetClave" class="form-label">Clave provincial</label>
+                <input type="text" id="resetClave" class="form-control" required>
+              </div>
+              <div>
+                <label for="resetSecurityCode" class="form-label">Código de seguridad</label>
+                <input type="text" id="resetSecurityCode" class="form-control" required>
+                <small class="text-muted">Código privado asignado a la escuela (no compartirlo).</small>
+              </div>
+              <div>
+                <label for="resetNewPassword" class="form-label">Nueva contraseña</label>
+                <input type="password" id="resetNewPassword" class="form-control" minlength="6" required>
+              </div>
+              <div>
+                <label for="resetConfirmPassword" class="form-label">Confirmar contraseña</label>
+                <input type="password" id="resetConfirmPassword" class="form-control" minlength="6" required>
+              </div>
+              <div id="resetPasswordFeedback" class="small"></div>
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Actualizar</button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -182,10 +194,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <footer class="site-footer">
         <div class="container">
-            © 2025 JDLacosta - Todos los derechos reservados.
+            &copy; 2025 JDLacosta - Todos los derechos reservados.
         </div>
     </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // Mostrar error pasado por servidor (login.php?error=...)
 (() => {
@@ -199,10 +212,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 })();
 
 // Manejar click en "¿Olvidaste tu contraseña?"
+const resetModalInstance = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
 document.getElementById('resetPasswordLink').addEventListener('click', function(e) {
     e.preventDefault();
-    const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
-    modal.show();
+    document.getElementById('resetPasswordForm').reset();
+    const feedback = document.getElementById('resetPasswordFeedback');
+    feedback.textContent = '';
+    feedback.className = 'small';
+    resetModalInstance.show();
+});
+
+document.getElementById('resetPasswordForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const clave = document.getElementById('resetClave').value.trim();
+    const code = document.getElementById('resetSecurityCode').value.trim();
+    const pass1 = document.getElementById('resetNewPassword').value;
+    const pass2 = document.getElementById('resetConfirmPassword').value;
+    const feedback = document.getElementById('resetPasswordFeedback');
+    feedback.textContent = '';
+    feedback.className = 'small text-muted';
+
+    if (!clave || !code) {
+        feedback.textContent = 'Complete clave y código.';
+        feedback.classList.add('text-danger');
+        return;
+    }
+    if (pass1.length < 6) {
+        feedback.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+        feedback.classList.add('text-danger');
+        return;
+    }
+    if (pass1 !== pass2) {
+        feedback.textContent = 'Las contraseñas no coinciden.';
+        feedback.classList.add('text-danger');
+        return;
+    }
+
+    try {
+        const fd = new FormData();
+        fd.append('clave', clave);
+        fd.append('security_code', code);
+        fd.append('new_password', pass1);
+
+        const res = await fetch('api/reset_password.php', {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        const json = await res.json();
+
+        if (res.ok && json.success) {
+            feedback.textContent = json.message || 'Contraseña actualizada correctamente';
+            feedback.className = 'small text-success';
+            setTimeout(() => {
+                resetModalInstance.hide();
+            }, 1200);
+        } else {
+            feedback.textContent = json.message || 'No se pudo actualizar la contraseña';
+            feedback.className = 'small text-danger';
+        }
+    } catch (err) {
+        console.error(err);
+        feedback.textContent = 'Error de conexión al intentar actualizar la contraseña.';
+        feedback.className = 'small text-danger';
+    }
 });
 
 document.getElementById('loginForm').addEventListener('submit', async function(e){
