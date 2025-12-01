@@ -1,4 +1,12 @@
 // Obtener datos del alumno desde sesión
+let CSRF_TOKEN = '';
+async function loadCsrfToken(){
+    try{
+        const r = await fetch('api/get_csrf.php', { credentials: 'same-origin' });
+        const j = await r.json();
+        if (j && j.csrf_token) CSRF_TOKEN = j.csrf_token;
+    }catch(e){ console.warn('No se pudo obtener CSRF token', e); }
+}
 let alumnoData = null;
 
 async function obtenerDatosAlumno() {
@@ -130,6 +138,7 @@ document.getElementById('inscripcionForm').addEventListener('submit', async func
     }
     
     const formData = new FormData(this);
+    if (CSRF_TOKEN) formData.append('csrf_token', CSRF_TOKEN);
     const submitBtn = this.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     
@@ -382,6 +391,7 @@ async function scanDNI(inputId, tipo, campos) {
 
 // Cargar datos cuando se carga la página
 document.addEventListener('DOMContentLoaded', async function() {
+    await loadCsrfToken();
     // 1. Primero obtener datos del alumno desde sesión
     await obtenerDatosAlumno();
     

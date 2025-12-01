@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/config.php';
+init_session();
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -26,6 +27,14 @@ if (strlen($newPassword) < 6) {
 
 require_once __DIR__ . '/config.php';
 
+// CSRF validation
+$csrf = $_POST['csrf_token'] ?? null;
+if (!validate_csrf_token($csrf)) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
+    exit;
+}
+
 try {
     $pdo = getDBConnection();
 
@@ -43,11 +52,15 @@ try {
         exit;
     }
 
+    // store hashed password
+    $hash = password_hash($newPassword, PASSWORD_DEFAULT);
     $update = $pdo->prepare("UPDATE secundarias SET pass = :pass WHERE id = :id LIMIT 1");
     $update->execute([
-        ':pass' => $newPassword,
+        ':pass' => $hash,
         ':id' => $escuela['id']
     ]);
+
+    write_app_log('password_reset', ['id' => $escuela['id'], 'clave' => $clave]);
 
     echo json_encode(['success' => true, 'message' => 'Contraseña actualizada con éxito']);
 } catch (Exception $e) {

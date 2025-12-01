@@ -13,6 +13,14 @@ Este es un sistema web para la inscripción de estudiantes en escuelas secundari
 ## Requisitos del Sistema
 
 - PHP 7.4 o superior
+## Notas de seguridad importantes
+
+- Las contraseñas ahora se almacenan de forma segura usando password_hash() de PHP. Las contraseñas existentes en texto plano se migrarán automáticamente la primera vez que el usuario inicie sesión.
+- Todas las sesiones usan cookies con flags HttpOnly y SameSite=Lax; en producción asegúrate de servir el sitio vía HTTPS para forzar el flag secure.
+- Agregado comprobación CSRF: el frontend pide un token a `api/get_csrf.php` y lo incluye en los formularios sensibles (login/reset, inscripciones).
+- Limites y validación de archivos subidos: sólo imágenes (jpg/png) y PDF, tamaño máximo 3MB; los archivos se renombran de forma aleatoria y se guardan en `uploads/dni/`.
+- Logging básico disponible en `api/logs/app.log` (eventos importantes como login, reset de contraseña e inscripciones exitosas).
+
 - MySQL 5.7 o superior
 - Servidor web (Apache/Nginx) o WAMP/XAMPP
 - Navegador web moderno

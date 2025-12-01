@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/config.php';
+init_session();
 header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['es_jefatura']) || !$_SESSION['es_jefatura']) {
@@ -37,17 +38,29 @@ if (!isset($_SESSION['distrito']) || (int)$_SESSION['distrito'] <= 0) {
 
 require_once __DIR__ . '/config.php';
 
+// CSRF validation
+$csrf = $_POST['csrf_token'] ?? null;
+if (!validate_csrf_token($csrf)) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
+    exit;
+}
+
 try {
     $pdo = getDBConnection();
     $distrito = (int)$_SESSION['distrito'];
 
     $sql = "UPDATE secundarias SET pass = :pass WHERE id = :id AND distrito = :distrito";
+    // save hashed password
+    $hash = password_hash($nuevaPass, PASSWORD_DEFAULT);
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
-        ':pass' => $nuevaPass,
+        ':pass' => $hash,
         ':id' => $escuelaId,
         ':distrito' => $distrito
     ]);
+
+    write_app_log('update_school_password', ['admin_id' => $_SESSION['escuela_id'] ?? null, 'escuela_id' => $escuelaId]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404);

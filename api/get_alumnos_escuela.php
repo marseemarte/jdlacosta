@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/config.php';
+init_session();
 header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['escuela_id']) || empty($_SESSION['es_jefatura'])) {
