@@ -9,3 +9,17 @@
 {"ts":"2025-12-01T13:59:56+01:00","event":"save_inscripcion_init","ip":"::1","data":{"method":"POST"}}
 {"ts":"2025-12-01T13:59:56+01:00","event":"save_inscripcion_post","ip":"::1","data":{"has_csrf":true,"escuela_id":"10","dni_est":"52716332","dni_tutor":"43223332","files_count":5}}
 {"ts":"2025-12-01T13:59:56+01:00","event":"inscripcion_saved","ip":"::1","data":{"escuela":10,"alumno_dni":"52716332"}}
+{"ts":"2025-12-01T14:51:28+01:00","event":"save_inscripcion_init","ip":"::1","data":{"method":"POST"}}
+{"ts":"2025-12-01T14:51:28+01:00","event":"save_inscripcion_post","ip":"::1","data":{"has_csrf":true,"escuela_id":"10","dni_est":"23333222","dni_tutor":"23111333","files_count":5}}
+{"ts":"2025-12-01T14:51:33+01:00","event":"save_inscripcion_init","ip":"::1","data":{"method":"POST"}}
+{"ts":"2025-12-01T14:51:33+01:00","event":"save_inscripcion_post","ip":"::1","data":{"has_csrf":true,"escuela_id":"10","dni_est":"23333222","dni_tutor":"23111333","files_count":5}}
+{"ts":"2025-12-01T14:53:41+01:00","event":"save_inscripcion_init","ip":"::1","data":{"method":"POST"}}
+{"ts":"2025-12-01T14:53:41+01:00","event":"save_inscripcion_post","ip":"::1","data":{"has_csrf":true,"escuela_id":"10","dni_est":"21111333","dni_tutor":"32222111","files_count":5}}
+{"ts":"2025-12-01T15:00:20+01:00","event":"save_inscripcion_init","ip":"::1","data":{"method":"POST"}}
+{"ts":"2025-12-01T15:00:20+01:00","event":"save_inscripcion_post","ip":"::1","data":{"has_csrf":true,"escuela_id":"10","dni_est":"21111333","dni_tutor":"32222111","files_count":5}}
+{"ts":"2025-12-01T15:07:18+01:00","event":"save_inscripcion_init","ip":"::1","data":{"method":"POST"}}
+{"ts":"2025-12-01T15:07:18+01:00","event":"save_inscripcion_post","ip":"::1","data":{"has_csrf":true,"escuela_id":"10","dni_est":"21111333","dni_tutor":"23111333","files_count":5}}
+{"ts":"2025-12-01T15:07:18+01:00","event":"inscripcion_saved","ip":"::1","data":{"escuela":10,"alumno_dni":"21111333"}}
+{"ts":"2025-12-01T15:08:21+01:00","event":"save_inscripcion_init","ip":"::1","data":{"method":"POST"}}
+{"ts":"2025-12-01T15:08:21+01:00","event":"save_inscripcion_post","ip":"::1","data":{"has_csrf":true,"escuela_id":"12","dni_est":"23333222","dni_tutor":"23333121","files_count":5}}
+{"ts":"2025-12-01T15:08:21+01:00","event":"inscripcion_saved","ip":"::1","data":{"escuela":12,"alumno_dni":"23333222"}}

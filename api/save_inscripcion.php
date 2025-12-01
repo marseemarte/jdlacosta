@@ -239,7 +239,7 @@ try {
     }
 
     // Insertar estudiante en tabla alumnos
-    // Nota: Algunos campos tienen valores por defecto según la estructura de la BD
+    // Nota: El campo id se genera automáticamente con AUTO_INCREMENT
     $stmt = $pdo->prepare("INSERT INTO alumnos (
         dni, apellido, nombre, fecha, direccion, localidad, escuela, vinculo, 
         entro, formulario_6to, id_secundaria, comprobado, dni_hermano, nombre_hermano, 
@@ -297,6 +297,12 @@ try {
         $pdo->rollBack();
     }
     http_response_code(500);
+    write_app_log('inscripcion_error', [
+        'message' => $e->getMessage(),
+        'code' => $e->getCode(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
     echo json_encode([
         'success' => false,
         'message' => 'Error al guardar la inscripción: ' . $e->getMessage()
