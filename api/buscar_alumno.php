@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/config.php';
+init_session();
 
 // Cabeceras para permitir solicitudes desde orígenes externos (p. ej. dominios distintos o HTTPS)
 header('Access-Control-Allow-Origin: *');

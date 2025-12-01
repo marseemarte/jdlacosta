@@ -1,5 +1,15 @@
+
+
 <?php
-session_start();
+// use central config to initialize sessions securely
+$configFile = __DIR__ . '/api/config.php';
+if (file_exists($configFile)) {
+    require_once $configFile;
+    init_session();
+} else {
+    // fallback
+    session_start();
+}
 
 // solo procesar POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -21,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // usar api/config.php para obtener la conexión
-    $configFile = __DIR__ . '/api/config.php';
     if (!file_exists($configFile)) {
         $msg = 'Falta fichero de configuración (api/config.php)';
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
@@ -34,23 +43,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    require_once $configFile;
-
+    // config already required above
     try {
         $db = getDBConnection();
 
-        $sql = "SELECT id, nombre, abreviatura, distrito FROM secundarias WHERE clave = :clave AND pass = :pass LIMIT 1";
+        $sql = "SELECT id, nombre, abreviatura, distrito, pass FROM secundarias WHERE clave = :clave LIMIT 1";
         $stmt = $db->prepare($sql);
-        $stmt->execute([':clave' => $clave, ':pass' => $pass]);
+        $stmt->execute([':clave' => $clave]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        // If user found, check password (supports legacy plaintext -> migration)
         if ($row) {
-            $_SESSION['escuela_id'] = $row['id'];
-            $_SESSION['escuela_nombre'] = $row['nombre'];
+            $stored = $row['pass'] ?? '';
+            $valid = false;
+
+            if (!empty($stored) && (strpos($stored, '$2y$') === 0 || strpos($stored, '$argon2') === 0 || strpos($stored, '$2a$') === 0)) {
+                $valid = password_verify($pass, $stored);
+            } else {
+                if ($pass === $stored) {
+                    $valid = true;
+                    // migrate to hashed
+                    $newHash = password_hash($pass, PASSWORD_DEFAULT);
+                    $upd = $db->prepare("UPDATE secundarias SET pass = :pass WHERE id = :id LIMIT 1");
+                    $upd->execute([':pass' => $newHash, ':id' => $row['id']]);
+                }
+            }
+
+            if ($valid) {
+                session_regenerate_id(true);
+                $_SESSION['escuela_id'] = $row['id'];
+                $_SESSION['escuela_nombre'] = $row['nombre'];
             
             // Detectar si es usuario JEFATURA
             $es_jefatura = isset($row['abreviatura']) && $row['abreviatura'] === 'JEFATURA';
-            if ($es_jefatura) {
+                if ($es_jefatura) {
                 $_SESSION['es_jefatura'] = true;
                 $_SESSION['distrito'] = (int)$row['distrito'];
             } else {
@@ -59,11 +85,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                 header('Content-Type: application/json; charset=utf-8');
-                echo json_encode([
-                    'success' => true,
-                    'es_jefatura' => $es_jefatura
-                ]);
+                    write_app_log('login_success', ['id' => $row['id'], 'clave' => $clave]);
+                    echo json_encode([
+                        'success' => true,
+                        'es_jefatura' => $es_jefatura
+                    ]);
                 exit;
+                }
             }
 
             // Redirigir según tipo de usuario
@@ -200,6 +228,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+let CSRF_TOKEN = '';
+async function loadCsrfToken(){
+    try{
+        const r = await fetch('api/get_csrf.php', { credentials: 'same-origin' });
+        const j = await r.json();
+        if (j && j.csrf_token) CSRF_TOKEN = j.csrf_token;
+    }catch(e){ console.warn('No se pudo obtener CSRF token', e); }
+}
+// try to load token early
+loadCsrfToken();
+
+<script>
 // Mostrar error pasado por servidor (login.php?error=...)
 (() => {
     const params = new URLSearchParams(window.location.search);
@@ -253,6 +293,7 @@ document.getElementById('resetPasswordForm').addEventListener('submit', async fu
         fd.append('clave', clave);
         fd.append('security_code', code);
         fd.append('new_password', pass1);
+            fd.append('csrf_token', CSRF_TOKEN);
 
         const res = await fetch('api/reset_password.php', {
             method: 'POST',
@@ -296,6 +337,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         const fd = new FormData();
         fd.append('username', clave);
         fd.append('password', pass);
+            fd.append('csrf_token', CSRF_TOKEN);
         // marcar petición como AJAX para que el servidor devuelva JSON
         const res = await fetch(window.location.pathname.replace(/.*\//, '') || 'login.php', { method:'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         const text = await res.text();

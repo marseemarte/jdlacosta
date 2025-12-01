@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/api/config.php';
+init_session();
 if (!isset($_SESSION['escuela_id']) || !isset($_SESSION['es_jefatura']) || !$_SESSION['es_jefatura']) {
     header('Location: login.php');
     exit;

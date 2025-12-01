@@ -1,6 +1,6 @@
 <?php
-session_start();
-require 'config.php';
+require_once __DIR__ . '/config.php';
+init_session();
 
 if ($_SERVER['REQUEST_METHOD'] != 'POST') {
     die(json_encode(['success' => false, 'error' => 'Método no permitido']));

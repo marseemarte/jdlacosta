@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/config.php';
+init_session();
 header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['escuela_id']) || empty($_SESSION['es_jefatura'])) {
@@ -33,16 +34,18 @@ try {
     }
 
     if ($type === 'lista_espera') {
-        $orderBy = 'a.espera ASC, a.apellido ASC, a.nombre ASC';
+        // Para lista de espera, ordenar por el número de sorteo según la escuela
+        $orderBy = 'COALESCE(s.orden, 999999) ASC, a.id ASC, a.apellido ASC, a.nombre ASC';
     } elseif ($type === 'no_ingresan') {
-        $orderBy = 'orden_lista_espera ASC';
+        $orderBy = 'a.id ASC, orden_lista_espera ASC';
     } else {
-        $orderBy = 's.orden ASC, a.apellido ASC, a.nombre ASC';
+        // Para ingresan y nomina, ordenar por FID (id) y luego por orden del sorteo
+        $orderBy = 'a.id ASC, COALESCE(s.orden, 999999) ASC, a.apellido ASC, a.nombre ASC';
     }
 
     $sql = "SELECT 
                 ROW_NUMBER() OVER (ORDER BY COALESCE(a.fecha_insc,'0000-00-00') ASC, COALESCE(a.hora_insc,'00:00:00') ASC, a.id ASC) AS orden_lista_espera,
-                a.id,
+                a.id AS fid,
                 a.dni,
                 a.apellido,
                 a.nombre,

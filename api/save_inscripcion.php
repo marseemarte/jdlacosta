@@ -1,8 +1,7 @@
 <?php
-session_start();
-header('Content-Type: application/json; charset=utf-8');
-
 require_once __DIR__ . '/config.php';
+init_session();
+header('Content-Type: application/json; charset=utf-8');
 
 // Crear directorio para imágenes si no existe
 $uploadDir = __DIR__ . '/../uploads/dni/';
@@ -12,6 +11,13 @@ if (!file_exists($uploadDir)) {
 
 try {
     $pdo = getDBConnection();
+    // CSRF validation
+    $csrfToken = $_POST['csrf_token'] ?? null;
+    if (!validate_csrf_token($csrfToken)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
+        exit;
+    }
     $pdo->beginTransaction();
 
     // Obtener datos del formulario
@@ -19,6 +25,13 @@ try {
     
     if ($escuela_id <= 0) {
         throw new Exception('ID de escuela no válido');
+    }
+
+    // If the user is logged in as a school, the posted escuela_id must match the session
+    if (isset($_SESSION['escuela_id']) && (int)$_SESSION['escuela_id'] > 0) {
+        if ((int)$_SESSION['escuela_id'] !== (int)$escuela_id) {
+            throw new Exception('ID de escuela no coincide con la sesión');
+        }
     }
 
     // Datos del estudiante
@@ -55,9 +68,17 @@ try {
         $numero_ppi = trim($_POST['numero_ppi'] ?? '');
         // Manejar archivo de documentación PPI
         if (isset($_FILES['documentacion_ppi']) && $_FILES['documentacion_ppi']['error'] === UPLOAD_ERR_OK) {
-            $ext = pathinfo($_FILES['documentacion_ppi']['name'], PATHINFO_EXTENSION);
-            $documentacion_ppi = 'ppi_' . $dni_estudiante . '_doc.' . $ext;
-            move_uploaded_file($_FILES['documentacion_ppi']['tmp_name'], $uploadDir . $documentacion_ppi);
+            // validate upload
+            $file = $_FILES['documentacion_ppi'];
+            if ($file['size'] > 3 * 1024 * 1024) throw new Exception('Archivo PPI demasiado grande');
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+            $allowed = ['image/jpeg','image/png','application/pdf'];
+            if (!in_array($mime, $allowed, true)) throw new Exception('Tipo de archivo PPI no permitido');
+            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $documentacion_ppi = bin2hex(random_bytes(8)) . '_ppi.' . $ext;
+            if (!move_uploaded_file($file['tmp_name'], $uploadDir . $documentacion_ppi)) throw new Exception('Error al guardar documento PPI');
         }
     }
 
@@ -115,28 +136,52 @@ try {
     $dni_frente_estudiante = '';
     $dni_reverso_estudiante = '';
     if (isset($_FILES['dni_frente_estudiante']) && $_FILES['dni_frente_estudiante']['error'] === UPLOAD_ERR_OK) {
-        $ext = pathinfo($_FILES['dni_frente_estudiante']['name'], PATHINFO_EXTENSION);
-        $dni_frente_estudiante = 'est_' . $dni_estudiante . '_frente.' . $ext;
-        move_uploaded_file($_FILES['dni_frente_estudiante']['tmp_name'], $uploadDir . $dni_frente_estudiante);
+        $file = $_FILES['dni_frente_estudiante'];
+        if ($file['size'] > 3 * 1024 * 1024) throw new Exception('Archivo DNI frente (estudiante) demasiado grande');
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        if (!in_array($mime, ['image/jpeg','image/png'], true)) throw new Exception('Tipo de archivo no permitido para DNI frente (estudiante)');
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $dni_frente_estudiante = bin2hex(random_bytes(8)) . '_est_frente.' . $ext;
+        if (!move_uploaded_file($file['tmp_name'], $uploadDir . $dni_frente_estudiante)) throw new Exception('Error al guardar DNI frente (estudiante)');
     }
     if (isset($_FILES['dni_reverso_estudiante']) && $_FILES['dni_reverso_estudiante']['error'] === UPLOAD_ERR_OK) {
-        $ext = pathinfo($_FILES['dni_reverso_estudiante']['name'], PATHINFO_EXTENSION);
-        $dni_reverso_estudiante = 'est_' . $dni_estudiante . '_reverso.' . $ext;
-        move_uploaded_file($_FILES['dni_reverso_estudiante']['tmp_name'], $uploadDir . $dni_reverso_estudiante);
+        $file = $_FILES['dni_reverso_estudiante'];
+        if ($file['size'] > 3 * 1024 * 1024) throw new Exception('Archivo DNI reverso (estudiante) demasiado grande');
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        if (!in_array($mime, ['image/jpeg','image/png'], true)) throw new Exception('Tipo de archivo no permitido para DNI reverso (estudiante)');
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $dni_reverso_estudiante = bin2hex(random_bytes(8)) . '_est_reverso.' . $ext;
+        if (!move_uploaded_file($file['tmp_name'], $uploadDir . $dni_reverso_estudiante)) throw new Exception('Error al guardar DNI reverso (estudiante)');
     }
 
     // Subir imágenes del DNI del tutor
     $dni_frente_tutor = '';
     $dni_reverso_tutor = '';
     if (isset($_FILES['dni_frente_tutor']) && $_FILES['dni_frente_tutor']['error'] === UPLOAD_ERR_OK) {
-        $ext = pathinfo($_FILES['dni_frente_tutor']['name'], PATHINFO_EXTENSION);
-        $dni_frente_tutor = 'tut_' . $dni_tutor . '_frente.' . $ext;
-        move_uploaded_file($_FILES['dni_frente_tutor']['tmp_name'], $uploadDir . $dni_frente_tutor);
+        $file = $_FILES['dni_frente_tutor'];
+        if ($file['size'] > 3 * 1024 * 1024) throw new Exception('Archivo DNI frente (tutor) demasiado grande');
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        if (!in_array($mime, ['image/jpeg','image/png'], true)) throw new Exception('Tipo de archivo no permitido para DNI frente (tutor)');
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $dni_frente_tutor = bin2hex(random_bytes(8)) . '_tut_frente.' . $ext;
+        if (!move_uploaded_file($file['tmp_name'], $uploadDir . $dni_frente_tutor)) throw new Exception('Error al guardar DNI frente (tutor)');
     }
     if (isset($_FILES['dni_reverso_tutor']) && $_FILES['dni_reverso_tutor']['error'] === UPLOAD_ERR_OK) {
-        $ext = pathinfo($_FILES['dni_reverso_tutor']['name'], PATHINFO_EXTENSION);
-        $dni_reverso_tutor = 'tut_' . $dni_tutor . '_reverso.' . $ext;
-        move_uploaded_file($_FILES['dni_reverso_tutor']['tmp_name'], $uploadDir . $dni_reverso_tutor);
+        $file = $_FILES['dni_reverso_tutor'];
+        if ($file['size'] > 3 * 1024 * 1024) throw new Exception('Archivo DNI reverso (tutor) demasiado grande');
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        if (!in_array($mime, ['image/jpeg','image/png'], true)) throw new Exception('Tipo de archivo no permitido para DNI reverso (tutor)');
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $dni_reverso_tutor = bin2hex(random_bytes(8)) . '_tut_reverso.' . $ext;
+        if (!move_uploaded_file($file['tmp_name'], $uploadDir . $dni_reverso_tutor)) throw new Exception('Error al guardar DNI reverso (tutor)');
     }
 
     // Insertar o actualizar tutor en tabla padres
@@ -216,6 +261,8 @@ try {
     ]);
 
     $pdo->commit();
+
+    write_app_log('inscripcion_saved', ['escuela' => $escuela_id, 'alumno_dni' => $dni_estudiante]);
 
     echo json_encode([
         'success' => true,

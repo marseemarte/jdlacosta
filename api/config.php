@@ -27,4 +27,53 @@ function getDBConnection() {
         exit;
     }
 }
+
+// Initialize session securely (set cookie params, start session if needed)
+function init_session(): void {
+    // sensible defaults
+    $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https';
+    $cookieParams = session_get_cookie_params();
+
+    session_set_cookie_params([
+        'lifetime' => $cookieParams['lifetime'] ?? 0,
+        'path' => $cookieParams['path'] ?? '/',
+        'domain' => $cookieParams['domain'] ?? '',
+        'secure' => $secure,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+}
+
+// CSRF helpers
+function get_csrf_token(): string {
+    if (!isset($_SESSION)) init_session();
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function validate_csrf_token(?string $token): bool {
+    if (!isset($_SESSION)) init_session();
+    if (empty($token) || empty($_SESSION['csrf_token'])) return false;
+    return hash_equals($_SESSION['csrf_token'], $token);
+}
+
+// Simple logging utility: appends json entries into api/logs/app.log (create directory writable by webserver)
+function write_app_log(string $event, array $data = []): void {
+    $logDir = __DIR__ . '/logs';
+    if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
+    $logFile = $logDir . '/app.log';
+    $entry = [
+        'ts' => date('c'),
+        'event' => $event,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+        'data' => $data
+    ];
+    @file_put_contents($logFile, json_encode($entry, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+}
 ?>
