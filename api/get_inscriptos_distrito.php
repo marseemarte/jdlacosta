@@ -18,6 +18,7 @@ try {
 
     // Devuelve todos los inscriptos del distrito, con secundaria, vínculo y orden de sorteo si existe
     $sql = "SELECT 
+                a.id AS fid,
                 a.dni,
                 a.apellido,
                 a.nombre,
@@ -33,7 +34,7 @@ try {
             LEFT JOIN vinculoesc v ON a.vinculo = v.id
             LEFT JOIN sorteo s ON CAST(a.dni AS UNSIGNED) = s.dni AND s.id_secundaria = a.id_secundaria
             WHERE sec.distrito = :distrito
-            ORDER BY a.apellido ASC, a.nombre ASC";
+            ORDER BY a.id ASC, a.apellido ASC, a.nombre ASC";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':distrito' => $distrito]);

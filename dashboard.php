@@ -259,7 +259,7 @@ $lista_espera_count = $lista_espera_count_stmt->fetchColumn();
                 <th>Vínculo</th>
                 <th>Teléfono</th>
                 <th>Mail</th>
-                <th>Orden</th>
+                <th>Sorteo</th>
               </tr>
             </thead>
           </table>
@@ -433,6 +433,7 @@ $(document).ready(function(){
           dataSrc: 'data'
         },
         columns: [
+          { data: 'fid', visible: false }, // Columna oculta para ordenar por FID
           { data: 'dni' },
           { data: 'apellido' },
           { data: 'nombre' },
@@ -445,6 +446,7 @@ $(document).ready(function(){
             `;
           } }
         ],
+        order: [[0, 'asc']], // Ordenar por FID (columna 0, oculta)
         pageLength: 25,
         lengthChange: true,
         language: {
@@ -536,6 +538,7 @@ $(document).ready(function(){
       escuelaDetalleTable = $('#escuelaDetalleTable').DataTable({
         ajax: { url: ajaxUrl, dataSrc: 'data' },
         columns: [
+          { data: 'fid', visible: false }, // Columna oculta para ordenar por FID
           { data: 'dni' },
           { data: 'apellido' },
           { data: 'nombre' },
@@ -548,6 +551,7 @@ $(document).ready(function(){
             }
           }
         ],
+        order: [[0, 'asc']], // Ordenar por FID (columna 0, oculta)
         pageLength: 25,
         lengthChange: true,
         language: {
@@ -617,6 +621,7 @@ $(document).ready(function(){
       }
     },
     columns: [
+      { data: 'fid', visible: false }, // Columna oculta para ordenar por FID
       { data: 'dni' },
       { data: 'apellido' },
       { data: 'nombre' },
@@ -635,6 +640,7 @@ $(document).ready(function(){
         }
       }
     ],
+    order: [[0, 'asc']], // Ordenar por FID (columna 0, oculta)
     pageLength: 10,
     lengthChange: false,
     language: {
@@ -670,17 +676,22 @@ $(document).ready(function(){
         }
       },
       columns: [
+        { data: 'orden_sorteo', visible: false }, // Columna oculta para ordenar por sorteo
+        { data: 'fid', visible: false }, // Columna oculta para ordenar por FID
         { data: 'dni' },
         { data: 'apellido' },
         { data: 'nombre' },
         { data: 'vinculo' },
         { data: 'telefono' },
         { data: 'mail' },
-        { data: 'espera', render: function(data) { return data || '-'; } }
+        { data: 'orden_sorteo', render: function(data) { 
+            return (data && data !== 999999) ? data : '-'; 
+          } 
+        }
       ],
       pageLength: 10,
       lengthChange: false,
-      order: [[6, 'asc']], // ordenar por orden de espera
+      order: [[0, 'asc'], [1, 'asc']], // ordenar por orden de sorteo y luego por FID
       language: {
         search: "Filtro:",
         paginate: { previous: "Prev", next: "Next" },
@@ -707,6 +718,7 @@ $(document).ready(function(){
         }
       },
       columns: [
+        { data: 'fid', visible: false }, // Columna oculta para ordenar por FID
         { data: 'dni' },
         { data: 'apellido' },
         { data: 'nombre' },
@@ -714,6 +726,7 @@ $(document).ready(function(){
         { data: 'telefono' },
         { data: 'mail' }
       ],
+      order: [[0, 'asc']], // Ordenar por FID (columna 0, oculta)
       pageLength: 10,
       lengthChange: false,
       language: {

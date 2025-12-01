@@ -32,17 +32,18 @@ try {
     
     // Query con JOINs para obtener telefono y mail de padres, y nombre del vínculo
     // Nota: dni en alumnos es varchar, pero en padrealumno es int, así que usamos CAST
-    // Para lista de espera, ordenamos por el campo 'espera', sino por orden del sorteo
+    // Para lista de espera, ordenamos por el número de sorteo según la escuela
     // NO aplicamos LIMIT porque queremos mostrar TODOS los registros del tipo solicitado
     if ($type === 'lista_espera') {
-        // Para lista de espera, ordenar por el campo espera (orden en lista de espera)
-        $orderByClause = "a.espera ASC, a.apellido ASC, a.nombre ASC";
+        // Para lista de espera, ordenar por el número de sorteo según la escuela
+        $orderByClause = "orden_sorteo ASC, a.id ASC, a.apellido ASC, a.nombre ASC";
     } else {
-        // Para ingresan y no_ingresan, ordenar por orden del sorteo
-        $orderByClause = "orden_sorteo ASC, a.apellido ASC, a.nombre ASC";
+        // Para ingresan y no_ingresan, ordenar por FID (id) y luego por orden del sorteo
+        $orderByClause = "a.id ASC, orden_sorteo ASC, a.apellido ASC, a.nombre ASC";
     }
     
     $sql = "SELECT 
+                a.id AS fid,
                 a.dni, 
                 a.apellido, 
                 a.nombre, 
