@@ -60,22 +60,7 @@ try {
 
     if ($esc) {
         $stored = $esc['pass'] ?? '';
-        $ok = false;
-
-        // If stored looks like a password hash use password_verify
-        if (!empty($stored) && (strpos($stored, '$2y$') === 0 || strpos($stored, '$argon2') === 0 || strpos($stored, '$2a$') === 0)) {
-            $ok = password_verify($pass, $stored);
-        } else {
-            // fallback: legacy plaintext comparison
-            if ($pass === $stored) {
-                $ok = true;
-                // migrate to hashed password
-                $newHash = password_hash($pass, PASSWORD_DEFAULT);
-                $upd = $pdo->prepare("UPDATE secundarias SET pass = :pass WHERE id = :id LIMIT 1");
-                $upd->execute([':pass' => $newHash, ':id' => $esc['id']]);
-                $stored = $newHash;
-            }
-        }
+        $ok = ($pass === $stored); // Plain text comparison only
 
         if ($ok) {
         // sesión mínima

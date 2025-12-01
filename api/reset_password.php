@@ -52,11 +52,10 @@ try {
         exit;
     }
 
-    // store hashed password
-    $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+    // store password in plain text (without hashing)
     $update = $pdo->prepare("UPDATE secundarias SET pass = :pass WHERE id = :id LIMIT 1");
     $update->execute([
-        ':pass' => $hash,
+        ':pass' => $newPassword,
         ':id' => $escuela['id']
     ]);
 

@@ -51,11 +51,10 @@ try {
     $distrito = (int)$_SESSION['distrito'];
 
     $sql = "UPDATE secundarias SET pass = :pass WHERE id = :id AND distrito = :distrito";
-    // save hashed password
-    $hash = password_hash($nuevaPass, PASSWORD_DEFAULT);
+    // save password in plain text (without hashing)
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
-        ':pass' => $hash,
+        ':pass' => $nuevaPass,
         ':id' => $escuelaId,
         ':distrito' => $distrito
     ]);

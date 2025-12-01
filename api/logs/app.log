@@ -1,2 +1,8 @@
 {"ts":"2025-12-01T04:52:53+01:00","event":"login_success","ip":"::1","data":{"id":50,"clave":"jdlacosta"}}
 {"ts":"2025-12-01T04:53:33+01:00","event":"login_success","ip":"::1","data":{"id":3,"clave":"0123MT0001"}}
+{"ts":"2025-12-01T05:02:02+01:00","event":"password_reset","ip":"::1","data":{"id":3,"clave":"0123MT0001"}}
+{"ts":"2025-12-01T05:02:45+01:00","event":"login_success","ip":"::1","data":{"id":2,"clave":"0123MS0007"}}
+{"ts":"2025-12-01T05:05:03+01:00","event":"password_reset","ip":"::1","data":{"id":3,"clave":"0123MT0001"}}
+{"ts":"2025-12-01T05:05:06+01:00","event":"login_success","ip":"::1","data":{"id":3,"clave":"0123MT0001"}}
+{"ts":"2025-12-01T05:07:20+01:00","event":"password_reset","ip":"::1","data":{"id":2,"clave":"0123MS0007"}}
+{"ts":"2025-12-01T05:07:22+01:00","event":"login_success","ip":"::1","data":{"id":2,"clave":"0123MS0007"}}

@@ -52,22 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([':clave' => $clave]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // If user found, check password (supports legacy plaintext -> migration)
+        // If user found, check password (plain text only, no encryption)
         if ($row) {
             $stored = $row['pass'] ?? '';
-            $valid = false;
-
-            if (!empty($stored) && (strpos($stored, '$2y$') === 0 || strpos($stored, '$argon2') === 0 || strpos($stored, '$2a$') === 0)) {
-                $valid = password_verify($pass, $stored);
-            } else {
-                if ($pass === $stored) {
-                    $valid = true;
-                    // migrate to hashed
-                    $newHash = password_hash($pass, PASSWORD_DEFAULT);
-                    $upd = $db->prepare("UPDATE secundarias SET pass = :pass WHERE id = :id LIMIT 1");
-                    $upd->execute([':pass' => $newHash, ':id' => $row['id']]);
-                }
-            }
+            $valid = ($pass === $stored);
 
             if ($valid) {
                 session_regenerate_id(true);
