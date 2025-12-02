@@ -2,6 +2,7 @@
 let CSRF_TOKEN = '';
 let escuelasSecundarias = []; // Guardar todas las escuelas para filtrado dinámico
 let escuelaSeleccionada = 0; // ID de la escuela seleccionada en el index (a excluir de opciones 2 y 3)
+let nombreEscuelaSeleccionada = ''; // Guardar el nombre de la escuela seleccionada en el index
 
 // Obtener el ID de la escuela desde los parámetros de URL
 function getEscuelaDelURL() {
@@ -91,6 +92,12 @@ async function loadFormData() {
         const escuelasSecData = await escuelasSecRes.json();
         if (escuelasSecData.success) {
             escuelasSecundarias = escuelasSecData.data; // Guardar todas las escuelas
+            // Encontrar el nombre de la escuela seleccionada en el index
+            const escuela = escuelasSecData.data.find(e => parseInt(e.id) === escuelaSeleccionada);
+            if (escuela) {
+                nombreEscuelaSeleccionada = escuela.nombre;
+                console.log('Escuela seleccionada en index:', nombreEscuelaSeleccionada);
+            }
             // NO poblar los selects aquí - se llenarán cuando se seleccione procedencia
         }
 
@@ -225,6 +232,7 @@ function handleVinculoChange() {
     const camposDinamicosInputs = camposDinamicos.querySelectorAll('input');
     camposDinamicosInputs.forEach(input => {
         input.removeAttribute('required');
+        input.removeAttribute('readonly');
     });
     
     // Mostrar campos según el vínculo seleccionado
@@ -244,6 +252,10 @@ function handleVinculoChange() {
             document.getElementById('dni_profesor').setAttribute('required', 'required');
             document.getElementById('nombre_profesor').setAttribute('required', 'required');
             document.getElementById('escuela_profesor').setAttribute('required', 'required');
+            // Auto-completar el campo de escuela del profesor con la escuela seleccionada en index
+            const escuelaProfesorInput = document.getElementById('escuela_profesor');
+            escuelaProfesorInput.value = nombreEscuelaSeleccionada;
+            escuelaProfesorInput.setAttribute('readonly', 'readonly');
             break;
             
         case 4: // PPI

@@ -23,3 +23,13 @@
 {"ts":"2025-12-01T15:08:21+01:00","event":"save_inscripcion_init","ip":"::1","data":{"method":"POST"}}
 {"ts":"2025-12-01T15:08:21+01:00","event":"save_inscripcion_post","ip":"::1","data":{"has_csrf":true,"escuela_id":"12","dni_est":"23333222","dni_tutor":"23333121","files_count":5}}
 {"ts":"2025-12-01T15:08:21+01:00","event":"inscripcion_saved","ip":"::1","data":{"escuela":12,"alumno_dni":"23333222"}}
+{"ts":"2025-12-01T15:12:29+01:00","event":"save_inscripcion_init","ip":"::1","data":{"method":"POST"}}
+{"ts":"2025-12-01T15:12:29+01:00","event":"save_inscripcion_post","ip":"::1","data":{"has_csrf":true,"escuela_id":"12","dni_est":"43333222","dni_tutor":"13443223","files_count":5}}
+{"ts":"2025-12-01T15:12:29+01:00","event":"inscripcion_saved","ip":"::1","data":{"escuela":12,"alumno_dni":"43333222"}}
+{"ts":"2025-12-02T04:49:09+01:00","event":"save_inscripcion_init","ip":"::1","data":{"method":"POST"}}
+{"ts":"2025-12-02T04:49:09+01:00","event":"save_inscripcion_post","ip":"::1","data":{"has_csrf":true,"escuela_id":"10","dni_est":"23333212","dni_tutor":"32222111","files_count":5}}
+{"ts":"2025-12-02T04:49:09+01:00","event":"inscripcion_saved","ip":"::1","data":{"escuela":10,"alumno_dni":"23333212"}}
+{"ts":"2025-12-02T04:49:17+01:00","event":"login_success","ip":"::1","data":{"id":3,"clave":"0123MT0001"}}
+{"ts":"2025-12-02T05:03:41+01:00","event":"login_success","ip":"::1","data":{"id":50,"clave":"jdlacosta"}}
+{"ts":"2025-12-02T05:08:33+01:00","event":"login_success","ip":"::1","data":{"id":50,"clave":"jdlacosta"}}
+{"ts":"2025-12-02T05:10:40+01:00","event":"login_success","ip":"::1","data":{"id":50,"clave":"jdlacosta"}}

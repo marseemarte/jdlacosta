@@ -27,7 +27,7 @@ try {
     $pdo = getDBConnection();
     $distrito = (int)$_SESSION['distrito'];
 
-    $stmt = $pdo->prepare("SELECT id FROM secundarias WHERE distrito = :distrito AND (abreviatura IS NULL OR abreviatura != 'JEFATURA')");
+    $stmt = $pdo->prepare("SELECT id FROM secundarias WHERE distrito = :distrito AND abreviatura != 'JEFATURA' AND abreviatura != ''");
     $stmt->execute([':distrito' => $distrito]);
     $escuelas = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
