@@ -3,19 +3,33 @@ require_once __DIR__ . '/config.php';
 init_session();
 header('Content-Type: application/json; charset=utf-8');
 
+// Log inicial
+write_app_log('save_inscripcion_init', ['method' => $_SERVER['REQUEST_METHOD']]);
+
 // Crear directorio para imágenes si no existe
-$uploadDir = __DIR__ . '/../uploads/dni/';
+$uploadDir = __DIR__ . '/../img/dni/';
 if (!file_exists($uploadDir)) {
     mkdir($uploadDir, 0777, true);
 }
 
 try {
     $pdo = getDBConnection();
+    
+    // Log de datos recibidos
+    write_app_log('save_inscripcion_post', [
+        'has_csrf' => !empty($_POST['csrf_token']),
+        'escuela_id' => $_POST['escuela_id'] ?? 'missing',
+        'dni_est' => $_POST['dni_estudiante'] ?? 'missing',
+        'dni_tutor' => $_POST['dni_tutor'] ?? 'missing',
+        'files_count' => count($_FILES)
+    ]);
+    
     // CSRF validation
     $csrfToken = $_POST['csrf_token'] ?? null;
     if (!validate_csrf_token($csrfToken)) {
         http_response_code(403);
         echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
+        write_app_log('csrf_validation_failed', []);
         exit;
     }
     $pdo->beginTransaction();
@@ -143,8 +157,10 @@ try {
         finfo_close($finfo);
         if (!in_array($mime, ['image/jpeg','image/png'], true)) throw new Exception('Tipo de archivo no permitido para DNI frente (estudiante)');
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $dni_frente_estudiante = bin2hex(random_bytes(8)) . '_est_frente.' . $ext;
+        $dni_frente_estudiante = $dni_estudiante . '_es.' . $ext;
         if (!move_uploaded_file($file['tmp_name'], $uploadDir . $dni_frente_estudiante)) throw new Exception('Error al guardar DNI frente (estudiante)');
+    } else {
+        throw new Exception('Debe subir la foto del frente del DNI del estudiante');
     }
     if (isset($_FILES['dni_reverso_estudiante']) && $_FILES['dni_reverso_estudiante']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['dni_reverso_estudiante'];
@@ -154,8 +170,10 @@ try {
         finfo_close($finfo);
         if (!in_array($mime, ['image/jpeg','image/png'], true)) throw new Exception('Tipo de archivo no permitido para DNI reverso (estudiante)');
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $dni_reverso_estudiante = bin2hex(random_bytes(8)) . '_est_reverso.' . $ext;
+        $dni_reverso_estudiante = $dni_estudiante . '_es_r.' . $ext;
         if (!move_uploaded_file($file['tmp_name'], $uploadDir . $dni_reverso_estudiante)) throw new Exception('Error al guardar DNI reverso (estudiante)');
+    } else {
+        throw new Exception('Debe subir la foto del reverso del DNI del estudiante');
     }
 
     // Subir imágenes del DNI del tutor
@@ -169,8 +187,10 @@ try {
         finfo_close($finfo);
         if (!in_array($mime, ['image/jpeg','image/png'], true)) throw new Exception('Tipo de archivo no permitido para DNI frente (tutor)');
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $dni_frente_tutor = bin2hex(random_bytes(8)) . '_tut_frente.' . $ext;
+        $dni_frente_tutor = $dni_tutor . '_pf.' . $ext;
         if (!move_uploaded_file($file['tmp_name'], $uploadDir . $dni_frente_tutor)) throw new Exception('Error al guardar DNI frente (tutor)');
+    } else {
+        throw new Exception('Debe subir la foto del frente del DNI del tutor');
     }
     if (isset($_FILES['dni_reverso_tutor']) && $_FILES['dni_reverso_tutor']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['dni_reverso_tutor'];
@@ -180,8 +200,10 @@ try {
         finfo_close($finfo);
         if (!in_array($mime, ['image/jpeg','image/png'], true)) throw new Exception('Tipo de archivo no permitido para DNI reverso (tutor)');
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $dni_reverso_tutor = bin2hex(random_bytes(8)) . '_tut_reverso.' . $ext;
+        $dni_reverso_tutor = $dni_tutor . '_pf_r.' . $ext;
         if (!move_uploaded_file($file['tmp_name'], $uploadDir . $dni_reverso_tutor)) throw new Exception('Error al guardar DNI reverso (tutor)');
+    } else {
+        throw new Exception('Debe subir la foto del reverso del DNI del tutor');
     }
 
     // Insertar o actualizar tutor en tabla padres
@@ -217,7 +239,7 @@ try {
     }
 
     // Insertar estudiante en tabla alumnos
-    // Nota: Algunos campos tienen valores por defecto según la estructura de la BD
+    // Nota: El campo id se genera automáticamente con AUTO_INCREMENT
     $stmt = $pdo->prepare("INSERT INTO alumnos (
         dni, apellido, nombre, fecha, direccion, localidad, escuela, vinculo, 
         entro, formulario_6to, id_secundaria, comprobado, dni_hermano, nombre_hermano, 
@@ -275,6 +297,12 @@ try {
         $pdo->rollBack();
     }
     http_response_code(500);
+    write_app_log('inscripcion_error', [
+        'message' => $e->getMessage(),
+        'code' => $e->getCode(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
     echo json_encode([
         'success' => false,
         'message' => 'Error al guardar la inscripción: ' . $e->getMessage()

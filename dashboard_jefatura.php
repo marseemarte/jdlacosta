@@ -53,8 +53,8 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
         <button type="button" id="generateCodesBtn" class="btn btn-outline-secondary btn-sm">
           <i class="fas fa-shield-alt me-1"></i> Generar códigos de seguridad
         </button>
-        <button type="button" id="managePasswordsBtn" class="btn btn-warning btn-sm text-dark fw-semibold">
-          <i class="fas fa-key me-1"></i> Gestionar contraseñas
+        <button type="button" id="viewSecurityCodesBtn" class="btn btn-info btn-sm text-white fw-semibold">
+          <i class="fas fa-eye me-1"></i> Ver códigos de seguridad
         </button>
         <a href="inscriptos_nuevos.php" class="btn btn-outline-primary btn-sm">
           <i class="fa-solid fa-list"></i> Ver todos los inscriptos
@@ -155,33 +155,30 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
   <div class="modal fade" id="modalPassword" tabindex="-1" aria-labelledby="modalPasswordLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content border-0 shadow">
-        <div class="modal-header bg-warning-subtle border-0">
+        <div class="modal-header bg-info-subtle border-0">
           <h5 class="modal-title fw-semibold" id="modalPasswordLabel">
-            <i class="fas fa-key me-2"></i>Cambiar contraseña de escuela
+            <i class="fas fa-lock me-2"></i>Códigos de Seguridad
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
-        <div class="modal-body">
-          <form id="passwordForm" class="vstack gap-3">
-            <div>
-              <label for="passwordSchoolSelect" class="form-label">Escuela</label>
-              <select id="passwordSchoolSelect" class="form-select" required>
-                <option value="">Cargando escuelas...</option>
-              </select>
-            </div>
-            <div>
-              <label for="newPasswordInput" class="form-label">Nueva contraseña</label>
-              <input type="text" id="newPasswordInput" class="form-control" minlength="4" placeholder="Ingrese nueva contraseña" required>
-              <small class="text-muted">Debe tener al menos 4 caracteres. Se guardará tal cual se escriba.</small>
-            </div>
-            <div id="passwordModalFeedback" class="text-danger small"></div>
-            <div class="d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-              <button type="submit" class="btn btn-warning text-dark fw-semibold">
-                <i class="fas fa-save me-1"></i>Guardar
-              </button>
-            </div>
-          </form>
+        <div class="modal-body bg-light p-4">
+          <div class="table-responsive">
+            <table id="securityCodesTable" class="table table-striped table-sm">
+              <thead class="table-light">
+                <tr>
+                  <th>Escuela</th>
+                  <th>Código de Seguridad</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer bg-white border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i>Cerrar
+          </button>
         </div>
       </div>
     </div>
@@ -241,8 +238,6 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
 
     var alumnosModalTable = null;
     var modalElement = document.getElementById('modalAlumnos');
-    var passwordModalEl = document.getElementById('modalPassword');
-    var passwordModal = new bootstrap.Modal(passwordModalEl);
 
     $(modalElement).on('hidden.bs.modal', function () {
       if (alumnosModalTable) {
@@ -265,11 +260,8 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
       mostrarAlumnos($(this).data('escuela-id'), $(this).data('escuela-nombre'), 'no_ingresan');
     });
 
-    $('#managePasswordsBtn').on('click', function(){
-      cargarEscuelasParaPassword();
-      $('#newPasswordInput').val('');
-      $('#passwordModalFeedback').text('');
-      passwordModal.show();
+    $('#viewSecurityCodesBtn').on('click', function(){
+      cargarCodigosSeguridad();
     });
 
     $('#generateCodesBtn').on('click', function(){
@@ -308,6 +300,42 @@ $esc_nombre = $esc['nombre'] ?? 'Jefatura Distrital';
         });
       });
     });
+
+    function cargarCodigosSeguridad() {
+      var tbody = $('#securityCodesTable tbody');
+      tbody.html('<tr><td colspan="2" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>');
+      
+      $.ajax({
+        url: 'api/get_security_codes.php',
+        dataType: 'json'
+      }).done(function(resp){
+        if (!resp || !resp.success || !resp.data) {
+          tbody.html('<tr><td colspan="2" class="text-center text-danger">Error al cargar los códigos</td></tr>');
+          return;
+        }
+        
+        if (resp.data.length === 0) {
+          tbody.html('<tr><td colspan="2" class="text-center text-muted">No hay escuelas disponibles</td></tr>');
+          return;
+        }
+        
+        var html = '';
+        resp.data.forEach(function(esc){
+          html += `<tr>
+            <td>${esc.nombre}</td>
+            <td><code class="bg-light p-2">${esc.codigo}</code></td>
+          </tr>`;
+        });
+        tbody.html(html);
+        
+        var modal = new bootstrap.Modal(document.getElementById('modalPassword'));
+        modal.show();
+      }).fail(function(){
+        tbody.html('<tr><td colspan="2" class="text-center text-danger">Error de conexión</td></tr>');
+        var modal = new bootstrap.Modal(document.getElementById('modalPassword'));
+        modal.show();
+      });
+    }
 
     function cargarEscuelasParaPassword() {
       var select = $('#passwordSchoolSelect');
